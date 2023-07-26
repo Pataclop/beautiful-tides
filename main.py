@@ -8,7 +8,7 @@ from unidecode import unidecode
 import re
 
 
-
+semaine = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"]
 
 def aligne_basse(chaine):
     # Créer un modèle de regex pour trouver "Maree basse" suivie de la prochaine lettre "M" ou "L"
@@ -76,29 +76,72 @@ def remove_lines_after_marker(text, marker):
     result = "\n".join(output_lines)
     return result
 
-url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/le-verdon-sur-mer-1036/aout-2023"  # Remplacez cela par l'URL de la page que vous souhaitez scraper
+def ligne_commence_par_mot(liste_mots, ligne):
+    for mot in liste_mots:
+        if ligne.startswith(mot):
+            return True
+    return False
+
+
+url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/le-verdon-sur-mer-1036/septembre-2023"  # Remplacez cela par l'URL de la page que vous souhaitez scraper
 
 response = requests.get(url)
-if response.status_code == 200:
-    soup = BeautifulSoup(response.content, "html.parser")
-    t = clean(soup)
-    t = t.replace(',', '\n')
-    t = unidecode(t)
-    t = output_text = remove_lines_until_marker(t, "101-129")
-    t = output_text = remove_lines_until_marker(t, "101-129")
-    t = output_text = remove_lines_after_marker(t, "3201")
-    t = t.replace("\n ", "\n")[1:]
-    t = t.replace("Lune\n", "Lune : ")
-    t = t.replace("Saint\nSaint", "Saint")
-    t = aligne_basse(t)
-    t = t.replace(" Maree haute", "\nMaree haute")
-    t = t.replace(" Lune :", "\nLune :")
-    t = aligne_haute(t)
-    t = t.replace(" Mar", "\nMar")
-    t = t.replace(" Lune :", "\nLune :")
-    t = t.replace("\nCoucher\n", " ")
-    t = t.replace("Lever\n", "Soleil : ")
-    ecrire_texte_dans_csv(t, "out.txt ")
+if response.status_code != 200:
+    print("Error: %s" % response.status_code)
+    
+    
+    
+soup = BeautifulSoup(response.content, "html.parser")
+t = clean(soup)
+t = t.replace(',', '\n')
+t = unidecode(t)
+t = output_text = remove_lines_until_marker(t, "101-129")
+t = output_text = remove_lines_until_marker(t, "101-129")
+t = output_text = remove_lines_after_marker(t, "3201")
+t = t.replace("\n ", "\n")[1:]
+t = t.replace("Lune\n", "Lune : ")
+t = t.replace("Saint\nSaint", "Saint")
+t = aligne_basse(t)
+t = t.replace(" Maree haute", "\nMaree haute")
+t = t.replace(" Lune :", "\nLune :")
+t = aligne_haute(t)
+t = t.replace(" Mar", "\nMar")
+t = t.replace(" Lune :", "\nLune :")
+t = t.replace("\nCoucher\n", " ")
+t = t.replace("Lever\n", "Soleil : ")
+
+t = t.replace("lundi","lun")
+t = t.replace("mardi","mar")
+t = t.replace("mercredi", "mer")
+t = t.replace("jeudi","jeu")
+t = t.replace("vendredi", "ven")
+t = t.replace("samedi", "sam")
+t = t.replace("dimanche", "dim")
+    
+lines = t.split('\n')
+tab = np.empty((124, 5), dtype=object)
+i = 0
+date = "rien 0"
+lune = None
+for l in lines:
+    if ligne_commence_par_mot(semaine, l):
+        date = l
+    if l.startswith("Maree"):
+        tab[i][0] = date
+        l = l[12:]
+        tmp = l.split(" ")
+        tab[i][1] = tmp[0]
+        tab[i][2] = tmp[1]
+        if len(tmp)==3 :
+            tab[i][3] = tmp[2]
+        i=i+1
+    if l.startswith("Lune"):
+        tab[i-1][4] = l[7:]
+
+
+
+ecrire_texte_dans_csv(t, "out.txt ")
+
 
 
 
@@ -111,12 +154,20 @@ if response.status_code == 200:
 
 
 # Liste des hauteurs (exemples)
-hauteurs = [4.89, 2.10, 4.99, 2.05, 4.89, 2.10, 4.99, 2.05]
-heures = ["12:34", "12:55", "2:34", "23:55","12:34", "12:55", "2:34", "23:55"]
-coeficient = ["90", "92", "94", "93","90", "92", "94", "93"]
+hauteurs = np.zeros(124)
+for i in range(len(hauteurs)):
+    if tab[i][2] is not None :
+        hauteurs[i] = float(tab[i][2][:-1])
+
+heures = np.empty((124), dtype=object)
+for i in range(len(hauteurs)):
+    if tab[i][1] is not None :
+        heures[i] = tab[i][1]
+
+#coeficient = ["90", "92", "94", "93","90", "92", "94", "93"]
 
 # Créer une liste d'abscisses pour les hauteurs
-abscisses = [i*50 for i in range(len(hauteurs))]
+abscisses = [i*5 for i in range(len(hauteurs))]
 
 # Créer la figure et les axes
 fig, ax = plt.subplots()
@@ -132,20 +183,21 @@ for x, y in zip(abscisses, hauteurs):
 for x, y, h in zip(abscisses, hauteurs, heures):
     ax.text(x, y+0.4, h, ha='center', va='bottom', fontname='Arial', fontsize=12, color='blue', weight='bold')
 
-for x, y, i in  zip(abscisses, hauteurs, coeficient):
-    ax.text(x, 3.5, i, ha='center', va='bottom', fontname='Arial', fontsize=12, color='blue', weight='bold')
-# Tracer les points pour les hauteurs
-ax.plot(abscisses, hauteurs)
-ax.axis('off')
+#for x, y, i in  zip(abscisses, hauteurs, coeficient):
+#    ax.text(x, 3.5, i, ha='center', va='bottom', fontname='Arial', fontsize=12, color='blue', weight='bold')
+## Tracer les points pour les hauteurs
+#ax.plot(abscisses, hauteurs)
+#ax.axis('off')
+plt.xlim(0, 300)
 
-#plt.show()
+plt.axis('off')
+plt.show()
 
 temp_image_path = "temp_plot.png"
-plt.savefig(temp_image_path, dpi=100, bbox_inches='tight')  # dpi contrôle la résolution de l'image
+plt.savefig(temp_image_path, dpi=300, bbox_inches='tight')  # dpi contrôle la résolution de l'image
 
 # Charger l'image temporaire avec OpenCV
 image = cv2.imread(temp_image_path)
-
 # Supprimer l'image temporaire
 import os
 os.remove(temp_image_path)
