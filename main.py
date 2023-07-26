@@ -188,26 +188,11 @@ for x, y, h in zip(abscisses, hauteurs, heures):
 ## Tracer les points pour les hauteurs
 #ax.plot(abscisses, hauteurs)
 #ax.axis('off')
-plt.xlim(0, 300)
+#plt.xlim(0, 300)
 
 plt.axis('off')
-plt.show()
-
-temp_image_path = "temp_plot.png"
-plt.savefig(temp_image_path, dpi=300, bbox_inches='tight')  # dpi contrôle la résolution de l'image
-
-# Charger l'image temporaire avec OpenCV
-image = cv2.imread(temp_image_path)
-# Supprimer l'image temporaire
-import os
-os.remove(temp_image_path)
-
-# Afficher l'image (optionnel)
-#cv2.imshow("Figure OpenCV", image)
-#cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-# Enregistrer l'image OpenCV dans un format spécifique (par exemple JPEG)
-output_image_path = "output_plot.jpg"
-cv2.imwrite(output_image_path, image)
-
+largeur_pouces = 80
+hauteur_pouces = 6
+fig = plt.gcf()
+fig.set_size_inches(largeur_pouces, hauteur_pouces)
+plt.savefig('mon_graphe.png', dpi=300, bbox_inches='tight')
