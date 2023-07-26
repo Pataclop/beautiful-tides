@@ -159,12 +159,19 @@ for i in range(len(hauteurs)):
     if tab[i][2] is not None :
         hauteurs[i] = float(tab[i][2][:-1])
 
+hauteurs = np.delete(hauteurs, np.where(hauteurs == 0.0))
+moyenne_hauteur = np.mean(hauteurs)
+
 heures = np.empty((124), dtype=object)
 for i in range(len(hauteurs)):
     if tab[i][1] is not None :
         heures[i] = tab[i][1]
+heures = np.delete(heures, np.where(heures == ""))
 
-#coeficient = ["90", "92", "94", "93","90", "92", "94", "93"]
+coeficient = np.empty((124), dtype=object)
+for i in range(len(coeficient)):
+    if tab[i][3] is not None :
+        coeficient[i] = (tab[i][3])
 
 # Créer une liste d'abscisses pour les hauteurs
 abscisses = [i*5 for i in range(len(hauteurs))]
@@ -174,14 +181,31 @@ fig, ax = plt.subplots()
 
 # Tracer les hauteurs sous forme de segments noirs
 for i in range(len(hauteurs) - 1):
-    ax.plot([abscisses[i], abscisses[i+1]], [hauteurs[i], hauteurs[i+1]], color='black')
+    ax.plot([abscisses[i], abscisses[i+1]], [hauteurs[i], hauteurs[i+1]], color='black', linewidth=3)
 
 
 for x, y in zip(abscisses, hauteurs):
-    ax.text(x, y+0.2, f'{y}', ha='center', va='bottom', fontname='Arial', fontsize=12, color='blue', weight='bold')
-    
+    if y > moyenne_hauteur :
+        ax.text(x, y+0.2, f'{y}', ha='center', va='bottom', fontname='Arial', fontsize=12, color='grey', weight='bold')
+    else :
+        ax.text(x, y-0.2, f'{y}', ha='center', va='top', fontname='Arial', fontsize=12, color='grey', weight='bold')
+        
 for x, y, h in zip(abscisses, hauteurs, heures):
-    ax.text(x, y+0.4, h, ha='center', va='bottom', fontname='Arial', fontsize=12, color='blue', weight='bold')
+    if y > moyenne_hauteur :
+        ax.text(x, y+0.4, h, ha='center', va='bottom', fontname='Arial', fontsize=12, color='black', weight='bold')
+    else :
+        ax.text(x, y-0.6, h, ha='center', va='bottom', fontname='Arial', fontsize=12, color='black', weight='bold')
+
+last_coef = 0
+for i in range(5):
+    if coeficient[i] is not None and int(coeficient[i]) >10:
+        last_coef = coeficient[i]   
+for x, y, c in zip(abscisses, hauteurs, coeficient):
+    if c is not None and int(c) > 10 :
+        last_coef = c
+    if y > moyenne_hauteur :
+        ax.text(x, moyenne_hauteur-0.3, str(last_coef), ha='center', va='bottom', fontname='Arial', fontsize=14, color='black', weight='bold')
+
 
 #for x, y, i in  zip(abscisses, hauteurs, coeficient):
 #    ax.text(x, 3.5, i, ha='center', va='bottom', fontname='Arial', fontsize=12, color='blue', weight='bold')
