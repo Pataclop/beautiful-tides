@@ -191,7 +191,10 @@ def draw(link, nom):
         if c is not None and int(c) > 10 :
             last_coef = c
         if y > moyenne_hauteur :
-            ax.text(x, moyenne_hauteur-0.3, str(last_coef), ha='center', va='bottom', fontname='Arial', fontsize=14, color='black', weight='bold')
+            if int(last_coef) > 95 :
+                ax.text(x, moyenne_hauteur-0.3, str(last_coef), backgroundcolor=(1.0, 0.9, 0.0, 0.5), ha='center', va='bottom', fontname='Arial', fontsize=14, color='black', weight='bold')
+            else :
+                ax.text(x, moyenne_hauteur-0.3, str(last_coef), ha='center', va='bottom', fontname='Arial', fontsize=14, color='black', weight='bold')
 
 
     #for x, y, i in  zip(abscisses, hauteurs, coeficient):
@@ -210,6 +213,6 @@ def draw(link, nom):
     
 mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
 url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/le-verdon-sur-mer-1036/" 
-
+mois = ["aout"]
 for m in mois :
     draw(url+m+"-2023", m+"-2023.png")
