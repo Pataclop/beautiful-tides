@@ -8,7 +8,7 @@ from unidecode import unidecode
 import re
 
 
-semaine = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"]
+semaine = ["lu", "ma", "me", "je", "ve", "sa", "di"]
 
 def aligne_basse(chaine):
     # Créer un modèle de regex pour trouver "Maree basse" suivie de la prochaine lettre "M" ou "L"
@@ -110,13 +110,13 @@ def draw(link, nom):
     t = t.replace("\nCoucher\n", " ")
     t = t.replace("Lever\n", "Soleil : ")
 
-    t = t.replace("lundi","lun")
-    t = t.replace("mardi","mar")
-    t = t.replace("mercredi", "mer")
-    t = t.replace("jeudi","jeu")
-    t = t.replace("vendredi", "ven")
-    t = t.replace("samedi", "sam")
-    t = t.replace("dimanche", "dim")
+    t = t.replace("lundi","lu")
+    t = t.replace("mardi","ma")
+    t = t.replace("mercredi", "me")
+    t = t.replace("jeudi","je")
+    t = t.replace("vendredi", "ve")
+    t = t.replace("samedi", "sa")
+    t = t.replace("dimanche", "di")
         
     lines = t.split('\n')
     tab = np.empty((124, 5), dtype=object)
@@ -148,7 +148,7 @@ def draw(link, nom):
 
     hauteurs = np.delete(hauteurs, np.where(hauteurs == 0.0))
     moyenne_hauteur = np.mean(hauteurs)
-
+    print (tab)
     heures = np.empty((124), dtype=object)
     for i in range(len(hauteurs)):
         if tab[i][1] is not None :
@@ -176,12 +176,18 @@ def draw(link, nom):
             ax.text(x, y+0.2, f'{y}', ha='center', va='bottom', fontname='Arial', fontsize=12, color='grey', weight='bold')
         else :
             ax.text(x, y-0.2, f'{y}', ha='center', va='top', fontname='Arial', fontsize=12, color='grey', weight='bold')
-            
+    tmp = 0
+    ttmp = "t"
     for x, y, h in zip(abscisses, hauteurs, heures):
         if y > moyenne_hauteur :
             ax.text(x, y+0.4, h, ha='center', va='bottom', fontname='Arial', fontsize=12, color='black', weight='bold')
+            jour = tab[tmp][0]
+            if ttmp!= jour :
+                ax.text(x, y+1.2, tab[tmp][0], rotation=3, ha='center', va='center', color='black', fontsize=20)
+            ttmp = jour
         else :
             ax.text(x, y-0.6, h, ha='center', va='bottom', fontname='Arial', fontsize=12, color='black', weight='bold')
+        tmp = tmp+1
 
     last_coef = 0
     for i in range(5):
@@ -195,14 +201,6 @@ def draw(link, nom):
                 ax.text(x, moyenne_hauteur-0.3, str(last_coef), backgroundcolor=(1.0, 0.9, 0.0, 0.5), ha='center', va='bottom', fontname='Arial', fontsize=14, color='black', weight='bold')
             else :
                 ax.text(x, moyenne_hauteur-0.3, str(last_coef), ha='center', va='bottom', fontname='Arial', fontsize=14, color='black', weight='bold')
-
-
-    #for x, y, i in  zip(abscisses, hauteurs, coeficient):
-    #    ax.text(x, 3.5, i, ha='center', va='bottom', fontname='Arial', fontsize=12, color='blue', weight='bold')
-    ## Tracer les points pour les hauteurs
-    #ax.plot(abscisses, hauteurs)
-    #ax.axis('off')
-    #plt.xlim(0, 300)
 
     plt.axis('off')
     largeur_pouces = 80
