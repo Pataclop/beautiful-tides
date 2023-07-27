@@ -3,10 +3,14 @@ import numpy as np
 import cv2
 import requests
 import csv
+from pathlib import Path
+from datetime import datetime
 from bs4 import BeautifulSoup
 from unidecode import unidecode
 import re
 import math
+from PIL import Image, ImageDraw, ImageFont, ImageOps
+import os
 
 NB_MAREE = 124
 
@@ -120,6 +124,33 @@ def convert_to_jours(jour_string):
     jour, nb = jour_string.split(' ')
     return int(nb)*1440
 
+
+def get_image_creation_time(image_path):
+    return os.path.getctime(image_path)
+
+
+def stack_images_in_order(input_folder, output_filename):
+    image_paths = sorted(Path(input_folder).glob("*.png"), key=get_image_creation_time)
+    stacked_images = []
+
+    for image_path in image_paths:
+        image = cv2.imread(str(image_path), cv2.IMREAD_UNCHANGED)  # Include the alpha channel.
+        stacked_images.append(image)
+
+    max_width = max(image.shape[1] for image in stacked_images)
+    total_height = sum(image.shape[0] for image in stacked_images)
+
+    stacked_image = np.zeros((total_height, max_width, stacked_images[0].shape[2]), dtype=np.uint8)
+
+    current_y = 0
+    for image in stacked_images:
+        h, w, _ = image.shape
+        stacked_image[current_y:current_y + h, :w] = image
+        current_y += h
+
+    cv2.imwrite(output_filename, stacked_image)
+
+
 def draw(link, nom):
     response = requests.get(link)
     if response.status_code != 200:
@@ -225,8 +256,12 @@ def draw(link, nom):
     ttmp = "t"
     ttmp2 = "r"
     angle = 0
+    last =  0.0
+    last2 = 0.0
     for x, y, h in zip(minutes, hauteurs, heures):
         if y > moyenne_hauteur :
+            if tmp <= 1 :
+                last = hauteurs[tmp+4]+1.45
             ax.text(x, y+0.52, h, ha='center', va='bottom', fontname='Arial', fontsize=12, color='black', weight='bold')
             jour = tab[tmp][0]
             if ttmp!= jour :
@@ -234,39 +269,42 @@ def draw(link, nom):
                 pt2 = (0,0)
                 if tmp+4<len(minutes):
                     pt2 = (minutes[tmp+4], hauteurs[tmp+4])
-                elif tmp+2<len(minutes):
-                    pt2 = (minutes[tmp+2], hauteurs[tmp+2])
                 else :
                     pt2 = (minutes[tmp], hauteurs[tmp])
                 angle = calculer_angle_entre_points(pt1, pt2)
-                ax.text((0.2+minutes[tmp]//1440)*1440, y+1.8, tab[tmp][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=20)
+                ax.text((0.35+minutes[tmp]//1440)*1440, y+2.0, tab[tmp][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=20)
                 x_points = [minutes[tmp]//1440*1440, ((minutes[tmp]//1440)+1)*1440]
-                if tmp<115 :
+                if tmp+4<len(hauteurs):
                     y_points = [hauteurs[tmp]+1.45, hauteurs[tmp+4]+1.45]
+                    if tmp>1:
+                        y_points = [last, hauteurs[tmp+4]+1.45]
+                        last = hauteurs[tmp+4]+1.45
                 else :
-                    y_points = [hauteurs[tmp]+1.45, hauteurs[tmp+2]+1.45]
+                    y_points = [hauteurs[tmp]+1.45, hauteurs[tmp]+1.45]
                 plot_line_with_dashes(x_points, y_points)
             ttmp = jour
         else :
+            if tmp <= 1 :
+                last2 = hauteurs[tmp+4]-1.45
             ax.text(x, y-0.8, h, ha='center', va='bottom', fontname='Arial', fontsize=12, color='black', weight='bold')
-
+            jour = tab[tmp][0]
             if ttmp2!= jour :
                 pt1 = (x, hauteurs[tmp])
                 pt2 = (0,0)
                 if tmp+4<len(minutes):
                     pt2 = (minutes[tmp+4], hauteurs[tmp+4])
-                elif tmp+2<len(minutes):
-                    pt2 = (minutes[tmp+2], hauteurs[tmp+2])
                 else :
                     pt2 = (minutes[tmp], hauteurs[tmp])
                 angle = calculer_angle_entre_points(pt1, pt2)
-                print(angle)
-                ax.text((0.2+minutes[tmp]//1440)*1440, y-1.9, tab[tmp][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=20)
+                ax.text((0.35+minutes[tmp]//1440)*1440, y-1.9, tab[tmp][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=20)
                 x_points = [minutes[tmp]//1440*1440, ((minutes[tmp]//1440)+1)*1440]
                 if x_points[1] == 0.0:
                     x_points[1] = x_points[0]
-                if tmp<115 :
+                if tmp+4<len(hauteurs):
                     y_points = [hauteurs[tmp]-1.45, hauteurs[tmp+4]-1.45]
+                    if tmp>1:
+                        y_points = [last2, hauteurs[tmp+4]-1.45]
+                        last2 = hauteurs[tmp+4]-1.45
                 else :
                     y_points = [hauteurs[tmp]-1.45, hauteurs[tmp]-1.45]
                 plot_line_with_dashes(x_points, y_points)
@@ -282,7 +320,9 @@ def draw(link, nom):
             last_coef = c
         if y > moyenne_hauteur :
             if int(last_coef) > 95 :
-                ax.text(x, moyenne_hauteur-0.3, str(last_coef), backgroundcolor=(1.0, 0.9, 0.0, 0.5), ha='center', va='bottom', fontname='Arial', fontsize=14, color='black', weight='bold')
+                ax.text(x, moyenne_hauteur-0.3, str(last_coef), ha='center', va='bottom', fontname='Arial', fontsize=15, color='red', weight='bold')
+            elif int(last_coef) < 35 :
+                ax.text(x, moyenne_hauteur-0.3, str(last_coef), ha='center', va='bottom', fontname='Arial', fontsize=15, color='limegreen', weight='bold')
             else :
                 ax.text(x, moyenne_hauteur-0.3, str(last_coef), ha='center', va='bottom', fontname='Arial', fontsize=14, color='black', weight='bold')
 
@@ -291,10 +331,83 @@ def draw(link, nom):
     hauteur_pouces = 6
     fig = plt.gcf()
     fig.set_size_inches(largeur_pouces, hauteur_pouces)
-    plt.savefig(nom, dpi=300, bbox_inches='tight')
-    
+    plt.savefig(nom, transparent=True, dpi=300, bbox_inches='tight', format='png')
+
+
+def combine_images (image1, image2):
+    if image1.shape != image2.shape:
+        raise ValueError("Les images doivent avoir la même taille et le même nombre de canaux.")
+
+    # Extraire les canaux d'images (B, G, R, alpha)
+    b, g, r, alpha = cv2.split(image1)
+
+    # Appliquer une pondération alpha aux canaux BGR de l'image 1
+    image1_bgr = cv2.merge((b, g, r))
+    overlay_image = cv2.addWeighted(image1_bgr, 1 - alpha / 255.0, image2, alpha / 255.0, 0)
+
+    # Recoller le canal alpha à l'image résultante
+    b, g, r = cv2.split(overlay_image)
+    overlay_with_alpha = cv2.merge((b, g, r, alpha))
+
+    # Enregistrer l'image résultante
+    cv2.imwrite('image_superposee.png', overlay_with_alpha)
+
+
+def create_gradient_image(width, height):
+    # Créer une image vide avec des canaux B, G et R (valeurs 0)
+    gradient_image = np.zeros((height, width, 3), dtype=np.uint8)
+
+    # Créer un gradient vertical du jaune/vert au bleu marine
+    for y in range(height):
+        # Calculer la valeur de la couleur pour chaque ligne
+        blue_value = int(255 * y / height)
+        green_value = int(255 - (255 * y / height))
+
+        # Remplir la ligne avec la couleur calculée
+        gradient_image[y, :, 0] = blue_value  # Canal bleu
+        gradient_image[y, :, 1] = green_value  # Canal vert
+        gradient_image[y, :, 2] = 255  # Canal rouge (fixé à 255 pour avoir du jaune)
+
+    return gradient_image
+
+def stack_images(image1_path, image2_path, output_path):
+    # Ouvrir les images avec Pillow
+    image1 = Image.open(image1_path)
+    image2 = Image.open(image2_path)
+
+    # Vérifier que les images ont la même taille
+    if image1.size != image2.size:
+        raise ValueError("Les images n'ont pas la même taille.")
+
+    # Créer une nouvelle image avec le même mode RGBA
+    stacked_image = Image.new("RGBA", image1.size)
+
+    # Combiner les deux images en les empilant
+    stacked_image.paste(image1, (0, 0), image1)
+    stacked_image.paste(image2, (0, 0), image2)
+
+    # Enregistrer le résultat dans un nouveau fichier
+    stacked_image.save(output_path)
+
 mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
 url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/le-verdon-sur-mer-1036/" 
-mois = ["aout"]
-for m in mois :
-    draw(url+m+"-2023", m+"-2023.png")
+#for m in mois :
+#    draw(url+m+"-2023", "IMAGES/"+m+"-2023.png")
+#for m in mois :
+#    draw(url+m+"-2024","IMAGES/"+m+"-2024.png")
+
+stack_images_in_order("IMAGES", "out.png")
+img = cv2.imread("out.png", cv2.IMREAD_UNCHANGED)
+height, width, chanel = img.shape
+gradient_image = create_gradient_image(width, height)
+height, width = gradient_image.shape[:2]
+alpha_channel = np.ones((height, width), dtype=gradient_image.dtype) * 255
+image_with_alpha = cv2.merge((gradient_image, alpha_channel))
+
+
+cv2.imwrite("gradient.png", gradient_image)
+
+
+print (img.shape, image_with_alpha.shape)
+
+stack_images("out.png", "gradient.png", "color.png")
