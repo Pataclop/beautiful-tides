@@ -6,6 +6,10 @@ import csv
 from bs4 import BeautifulSoup
 from unidecode import unidecode
 import re
+import math
+
+NB_MAREE = 124
+
 
 
 semaine = ["lu", "ma", "me", "je", "ve", "sa", "di"]
@@ -83,6 +87,39 @@ def ligne_commence_par_mot(liste_mots, ligne):
     return False
 
 
+def calculer_angle_entre_points(point1, point2):
+    # Extraire les coordonnées x et y de chaque point
+    x1, y1 = point1
+    x2, y2 = point2
+
+    # Calculer la différence entre les coordonnées x et y
+    diff_x = x2 - x1
+    diff_y = y2 - y1
+
+    # Calculer l'angle en radians en utilisant atan2
+    angle_radians = math.atan2(diff_y, diff_x)
+
+    # Convertir l'angle de radians à degrés
+    angle_degrees = math.degrees(angle_radians)
+
+    # Assurer que l'angle est positif (entre 0 et 360 degrés)
+    angle_degrees = (angle_degrees + 180) % 360 - 180
+    
+    return angle_degrees
+
+
+def plot_line_with_dashes(x_points, y_points):
+    linestyle = '--'
+    plt.plot(x_points, y_points, linestyle=linestyle)
+
+def convert_to_minutes(heure_string):
+    heures, minutes = heure_string.split('h')
+    return int(heures) * 60 + int(minutes)
+
+def convert_to_jours(jour_string):
+    jour, nb = jour_string.split(' ')
+    return int(nb)*1440
+
 def draw(link, nom):
     response = requests.get(link)
     if response.status_code != 200:
@@ -119,7 +156,7 @@ def draw(link, nom):
     t = t.replace("dimanche", "di")
         
     lines = t.split('\n')
-    tab = np.empty((124, 5), dtype=object)
+    tab = np.empty((NB_MAREE, 5), dtype=object)
     i = 0
     date = "rien 0"
     lune = None
@@ -141,7 +178,7 @@ def draw(link, nom):
 
 
     # Liste des hauteurs (exemples)
-    hauteurs = np.zeros(124)
+    hauteurs = np.zeros(NB_MAREE)
     for i in range(len(hauteurs)):
         if tab[i][2] is not None :
             hauteurs[i] = float(tab[i][2][:-1])
@@ -149,13 +186,21 @@ def draw(link, nom):
     hauteurs = np.delete(hauteurs, np.where(hauteurs == 0.0))
     moyenne_hauteur = np.mean(hauteurs)
     print (tab)
-    heures = np.empty((124), dtype=object)
+    heures = np.empty((NB_MAREE), dtype=object)
     for i in range(len(hauteurs)):
         if tab[i][1] is not None :
             heures[i] = tab[i][1]
-    heures = np.delete(heures, np.where(heures == ""))
+    heures = np.delete(heures, np.where(heures == None))
 
-    coeficient = np.empty((124), dtype=object)
+    minutes = np.zeros(NB_MAREE)
+    for i in range(len(heures)):
+        minutes[i] = convert_to_minutes(heures[i])+convert_to_jours(tab[i][0])
+    minutes = np.delete(minutes, np.where(minutes == 0))
+    ecarts_successifs = np.diff(minutes)
+    ecart_moyen = np.mean(ecarts_successifs)
+
+    ESPACE_MAREE = ecart_moyen
+    coeficient = np.empty((NB_MAREE), dtype=object)
     for i in range(len(coeficient)):
         if tab[i][3] is not None :
             coeficient[i] = (tab[i][3])
@@ -168,32 +213,71 @@ def draw(link, nom):
 
     # Tracer les hauteurs sous forme de segments noirs
     for i in range(len(hauteurs) - 1):
-        ax.plot([abscisses[i], abscisses[i+1]], [hauteurs[i], hauteurs[i+1]], color='black', linewidth=3)
+        ax.plot([minutes[i], minutes[i+1]], [hauteurs[i], hauteurs[i+1]], color='black', linewidth=3)
 
 
-    for x, y in zip(abscisses, hauteurs):
+    for x, y in zip(minutes, hauteurs):
         if y > moyenne_hauteur :
-            ax.text(x, y+0.2, f'{y}', ha='center', va='bottom', fontname='Arial', fontsize=12, color='grey', weight='bold')
+            ax.text(x, y+0.2, str(y)+"m", ha='center', va='bottom', fontname='Arial', fontsize=12, color='grey')
         else :
-            ax.text(x, y-0.2, f'{y}', ha='center', va='top', fontname='Arial', fontsize=12, color='grey', weight='bold')
+            ax.text(x, y-0.2, str(y)+"m", ha='center', va='top', fontname='Arial', fontsize=12, color='grey')
     tmp = 0
     ttmp = "t"
-    for x, y, h in zip(abscisses, hauteurs, heures):
+    ttmp2 = "r"
+    angle = 0
+    for x, y, h in zip(minutes, hauteurs, heures):
         if y > moyenne_hauteur :
-            ax.text(x, y+0.4, h, ha='center', va='bottom', fontname='Arial', fontsize=12, color='black', weight='bold')
+            ax.text(x, y+0.52, h, ha='center', va='bottom', fontname='Arial', fontsize=12, color='black', weight='bold')
             jour = tab[tmp][0]
             if ttmp!= jour :
-                ax.text(x, y+1.2, tab[tmp][0], rotation=3, ha='center', va='center', color='black', fontsize=20)
+                pt1 = (x, hauteurs[tmp])
+                pt2 = (0,0)
+                if tmp+4<len(minutes):
+                    pt2 = (minutes[tmp+4], hauteurs[tmp+4])
+                elif tmp+2<len(minutes):
+                    pt2 = (minutes[tmp+2], hauteurs[tmp+2])
+                else :
+                    pt2 = (minutes[tmp], hauteurs[tmp])
+                angle = calculer_angle_entre_points(pt1, pt2)
+                ax.text((0.2+minutes[tmp]//1440)*1440, y+1.8, tab[tmp][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=20)
+                x_points = [minutes[tmp]//1440*1440, ((minutes[tmp]//1440)+1)*1440]
+                if tmp<115 :
+                    y_points = [hauteurs[tmp]+1.45, hauteurs[tmp+4]+1.45]
+                else :
+                    y_points = [hauteurs[tmp]+1.45, hauteurs[tmp+2]+1.45]
+                plot_line_with_dashes(x_points, y_points)
             ttmp = jour
         else :
-            ax.text(x, y-0.6, h, ha='center', va='bottom', fontname='Arial', fontsize=12, color='black', weight='bold')
+            ax.text(x, y-0.8, h, ha='center', va='bottom', fontname='Arial', fontsize=12, color='black', weight='bold')
+
+            if ttmp2!= jour :
+                pt1 = (x, hauteurs[tmp])
+                pt2 = (0,0)
+                if tmp+4<len(minutes):
+                    pt2 = (minutes[tmp+4], hauteurs[tmp+4])
+                elif tmp+2<len(minutes):
+                    pt2 = (minutes[tmp+2], hauteurs[tmp+2])
+                else :
+                    pt2 = (minutes[tmp], hauteurs[tmp])
+                angle = calculer_angle_entre_points(pt1, pt2)
+                print(angle)
+                ax.text((0.2+minutes[tmp]//1440)*1440, y-1.9, tab[tmp][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=20)
+                x_points = [minutes[tmp]//1440*1440, ((minutes[tmp]//1440)+1)*1440]
+                if x_points[1] == 0.0:
+                    x_points[1] = x_points[0]
+                if tmp<115 :
+                    y_points = [hauteurs[tmp]-1.45, hauteurs[tmp+4]-1.45]
+                else :
+                    y_points = [hauteurs[tmp]-1.45, hauteurs[tmp]-1.45]
+                plot_line_with_dashes(x_points, y_points)
+            ttmp2 = jour
         tmp = tmp+1
 
     last_coef = 0
     for i in range(5):
         if coeficient[i] is not None and int(coeficient[i]) >10:
             last_coef = coeficient[i]   
-    for x, y, c in zip(abscisses, hauteurs, coeficient):
+    for x, y, c in zip(minutes, hauteurs, coeficient):
         if c is not None and int(c) > 10 :
             last_coef = c
         if y > moyenne_hauteur :
