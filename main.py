@@ -370,6 +370,22 @@ def create_gradient_image(width, height):
 
     return gradient_image
 
+
+
+
+def image_mois(text):
+    largeur = 18660
+    hauteur = 1375
+    # Créer une nouvelle image RGBA (mode "RGBA" pour gérer la transparence)
+    image = Image.new("RGBA", (largeur, hauteur), (255, 255, 255, 0))
+    draw = ImageDraw.Draw(image)
+    x, y = 7930, 200
+    police = ImageFont.truetype("AmaticSC-Bold.ttf", 700)
+    couleur_texte = (0, 0, 0, 255)
+    draw.text((x, y), text, font=police, fill=couleur_texte)
+    image.save("IMAGES/"+text+".png")
+
+
 def stack_images(image1_path, image2_path, output_path):
     # Ouvrir les images avec Pillow
     image1 = Image.open(image1_path)
@@ -389,25 +405,27 @@ def stack_images(image1_path, image2_path, output_path):
     # Enregistrer le résultat dans un nouveau fichier
     stacked_image.save(output_path)
 
+dossier_images = "IMAGES"
+
+if not os.path.exists(dossier_images):
+    # Créer le dossier
+    os.mkdir(dossier_images)
+
 mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
 url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/le-verdon-sur-mer-1036/" 
-#for m in mois :
-#    draw(url+m+"-2023", "IMAGES/"+m+"-2023.png")
-#for m in mois :
-#    draw(url+m+"-2024","IMAGES/"+m+"-2024.png")
+mois = ["janvier", "fevrier"]
+
+
+for m in mois :
+    image_mois(m+" 2024")
+    draw(url+m+"-2024","IMAGES/"+m+"-2024.png")
+
+
+
+
+
+
+
+
 
 stack_images_in_order("IMAGES", "out.png")
-img = cv2.imread("out.png", cv2.IMREAD_UNCHANGED)
-height, width, chanel = img.shape
-gradient_image = create_gradient_image(width, height)
-height, width = gradient_image.shape[:2]
-alpha_channel = np.ones((height, width), dtype=gradient_image.dtype) * 255
-image_with_alpha = cv2.merge((gradient_image, alpha_channel))
-
-
-cv2.imwrite("gradient.png", gradient_image)
-
-
-print (img.shape, image_with_alpha.shape)
-
-stack_images("out.png", "gradient.png", "color.png")
