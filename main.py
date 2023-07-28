@@ -216,7 +216,6 @@ def draw(link, nom):
 
     hauteurs = np.delete(hauteurs, np.where(hauteurs == 0.0))
     moyenne_hauteur = np.mean(hauteurs)
-    print (tab)
     heures = np.empty((NB_MAREE), dtype=object)
     for i in range(len(hauteurs)):
         if tab[i][1] is not None :
@@ -244,14 +243,14 @@ def draw(link, nom):
 
     # Tracer les hauteurs sous forme de segments noirs
     for i in range(len(hauteurs) - 1):
-        ax.plot([minutes[i], minutes[i+1]], [hauteurs[i], hauteurs[i+1]], color='black', linewidth=3)
+        ax.plot([minutes[i], minutes[i+1]], [hauteurs[i], hauteurs[i+1]], color='black', linewidth=4)
 
 
     for x, y in zip(minutes, hauteurs):
         if y > moyenne_hauteur :
-            ax.text(x, y+0.2, str(y)+"m", ha='center', va='bottom', fontname='Arial', fontsize=12, color='grey')
+            ax.text(x, y+0.2, str(y)+"m", ha='center', va='bottom', fontname='Arial', fontsize=12, color='white', weight='bold')
         else :
-            ax.text(x, y-0.2, str(y)+"m", ha='center', va='top', fontname='Arial', fontsize=12, color='grey')
+            ax.text(x, y-0.2, str(y)+"m", ha='center', va='top', fontname='Arial', fontsize=12, color='white',weight='bold')
     tmp = 0
     ttmp = "t"
     ttmp2 = "r"
@@ -370,7 +369,10 @@ def create_gradient_image(width, height):
 
     return gradient_image
 
-
+def image_vide(nom):
+    image = np.zeros((300, 10, 4), dtype=np.uint8)
+    image[:, :, 3] = 0
+    cv2.imwrite("IMAGES/"+nom, image)
 
 
 def image_mois(text):
@@ -413,19 +415,75 @@ if not os.path.exists(dossier_images):
 
 mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
 url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/le-verdon-sur-mer-1036/" 
-mois = ["janvier", "fevrier"]
 
-
+image_vide("1.png")
 for m in mois :
+    print(m+" 2024")
     image_mois(m+" 2024")
     draw(url+m+"-2024","IMAGES/"+m+"-2024.png")
 
-
-
-
-
-
-
+image_vide("2.png")
+image_vide("3.png")
+image_vide("4.png")
 
 
 stack_images_in_order("IMAGES", "out.png")
+
+img = cv2.imread("out.png")
+hauteur, largeur, c = img.shape
+
+couleur_fond = (255, 255, 255)
+couleurs_pastel = [(193, 224, 235), (240, 188, 191), (210, 222, 207), (255, 213, 194)]
+for i in range(len(couleurs_pastel)):
+    couleurs_pastel[i]=(couleurs_pastel[i][2], couleurs_pastel[i][1], couleurs_pastel[i][0])
+# Convertir les couleurs pastel en valeurs flottantes dans l'intervalle [0, 1]
+couleurs = [tuple(np.array(c) / 255.0) for c in couleurs_pastel]
+
+image = np.ones((hauteur, largeur, 3), dtype=np.float32) * couleur_fond
+
+nombre_zigzags = hauteur//500
+largeur_zigzag = largeur//9
+hauteur_zigzag = hauteur // nombre_zigzags
+epaisseur_zigzag = hauteur//(nombre_zigzags)
+
+for i in range(nombre_zigzags):
+    y = i * hauteur_zigzag
+    couleur = couleurs[i % len(couleurs)]
+
+    for x in range(0, largeur, largeur_zigzag):
+        if x % (2 * largeur_zigzag) == 0:
+            cv2.line(image, (x, y), (x + largeur_zigzag, y + hauteur_zigzag), couleur, epaisseur_zigzag)
+        else:
+            cv2.line(image, (x, y + hauteur_zigzag), (x + largeur_zigzag, y), couleur, epaisseur_zigzag)
+
+# Convertir l'image en type np.uint8 pour l'affichage
+image = (image * 255).astype(np.uint8)
+
+cv2.imwrite("colors.png", image)
+
+
+
+# Charger les images RGBA et RGB
+image_rgba = cv2.imread('out.png', cv2.IMREAD_UNCHANGED)  # Assurez-vous que l'image RGBA est lue correctement (avec les 4 canaux)
+image_rgb = cv2.GaussianBlur(cv2.imread('colors.png'), (17,17), 0)
+
+
+# Extraire les canaux RGBA
+rgba_channels = cv2.split(image_rgba)
+blue, green, red, alpha = rgba_channels
+
+# Convertir le canal alpha en un facteur de dilution (valeur entre 0 et 1)
+alpha_factor = alpha.astype(float) / 255.0
+
+# Mettre à jour les canaux RGB en utilisant le canal alpha comme facteur de dilution
+updated_red = (red * alpha_factor + image_rgb[:, :, 2] * (1 - alpha_factor)).astype(np.uint8)
+updated_green = (green * alpha_factor + image_rgb[:, :, 1] * (1 - alpha_factor)).astype(np.uint8)
+updated_blue = (blue * alpha_factor + image_rgb[:, :, 0] * (1 - alpha_factor)).astype(np.uint8)
+
+# Fusionner les canaux mis à jour en une seule image RGB
+merged_image = cv2.merge([updated_blue, updated_green, updated_red])
+
+# Afficher ou enregistrer l'image finale
+
+# Pour enregistrer l'image finale
+cv2.imwrite('image_fusionnee.png', merged_image)
