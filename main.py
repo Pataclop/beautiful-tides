@@ -243,14 +243,14 @@ def draw(link, nom):
 
     # Tracer les hauteurs sous forme de segments noirs
     for i in range(len(hauteurs) - 1):
-        ax.plot([minutes[i], minutes[i+1]], [hauteurs[i], hauteurs[i+1]], color='black', linewidth=4)
+        ax.plot([minutes[i], minutes[i+1]], [hauteurs[i], hauteurs[i+1]], color='black', linewidth=6)
 
 
     for x, y in zip(minutes, hauteurs):
         if y > moyenne_hauteur :
-            ax.text(x, y+0.2, str(y)+"m", ha='center', va='bottom', fontname='Arial', fontsize=12, color='white', weight='bold')
+            ax.text(x, y+0.2, str(y)+"m", ha='center', va='bottom', fontname='Arial', fontsize=15, color='white', weight='bold')
         else :
-            ax.text(x, y-0.2, str(y)+"m", ha='center', va='top', fontname='Arial', fontsize=12, color='white',weight='bold')
+            ax.text(x, y-0.2, str(y)+"m", ha='center', va='top', fontname='Arial', fontsize=15, color='white',weight='bold')
     tmp = 0
     ttmp = "t"
     ttmp2 = "r"
@@ -261,7 +261,7 @@ def draw(link, nom):
         if y > moyenne_hauteur :
             if tmp <= 1 :
                 last = hauteurs[tmp+4]+1.45
-            ax.text(x, y+0.52, h, ha='center', va='bottom', fontname='Arial', fontsize=12, color='black', weight='bold')
+            ax.text(x, y+0.6, h, ha='center', va='bottom', fontname='Arial', fontsize=15, color='black', weight='bold')
             jour = tab[tmp][0]
             if ttmp!= jour :
                 pt1 = (x, hauteurs[tmp])
@@ -271,7 +271,7 @@ def draw(link, nom):
                 else :
                     pt2 = (minutes[tmp], hauteurs[tmp])
                 angle = calculer_angle_entre_points(pt1, pt2)
-                ax.text((0.35+minutes[tmp]//1440)*1440, y+2.0, tab[tmp][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=20)
+                ax.text((0.35+minutes[tmp]//1440)*1440, y+2.0, tab[tmp][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
                 x_points = [minutes[tmp]//1440*1440, ((minutes[tmp]//1440)+1)*1440]
                 if tmp+4<len(hauteurs):
                     y_points = [hauteurs[tmp]+1.45, hauteurs[tmp+4]+1.45]
@@ -285,7 +285,7 @@ def draw(link, nom):
         else :
             if tmp <= 1 :
                 last2 = hauteurs[tmp+4]-1.45
-            ax.text(x, y-0.8, h, ha='center', va='bottom', fontname='Arial', fontsize=12, color='black', weight='bold')
+            ax.text(x, y-1.0, h, ha='center', va='bottom', fontname='Arial', fontsize=15, color='black', weight='bold')
             jour = tab[tmp][0]
             if ttmp2!= jour :
                 pt1 = (x, hauteurs[tmp])
@@ -295,7 +295,7 @@ def draw(link, nom):
                 else :
                     pt2 = (minutes[tmp], hauteurs[tmp])
                 angle = calculer_angle_entre_points(pt1, pt2)
-                ax.text((0.35+minutes[tmp]//1440)*1440, y-1.9, tab[tmp][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=20)
+                ax.text((0.35+minutes[tmp]//1440)*1440, y-1.9, tab[tmp][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
                 x_points = [minutes[tmp]//1440*1440, ((minutes[tmp]//1440)+1)*1440]
                 if x_points[1] == 0.0:
                     x_points[1] = x_points[0]
@@ -319,18 +319,18 @@ def draw(link, nom):
             last_coef = c
         if y > moyenne_hauteur :
             if int(last_coef) > 95 :
-                ax.text(x, moyenne_hauteur-0.3, str(last_coef), ha='center', va='bottom', fontname='Arial', fontsize=15, color='red', weight='bold')
+                ax.text(x, moyenne_hauteur-0.5, str(last_coef), ha='center', va='bottom', fontname='Arial', fontsize=18, color='red', weight='bold')
             elif int(last_coef) < 35 :
-                ax.text(x, moyenne_hauteur-0.3, str(last_coef), ha='center', va='bottom', fontname='Arial', fontsize=15, color='limegreen', weight='bold')
+                ax.text(x, moyenne_hauteur-0.5, str(last_coef), ha='center', va='bottom', fontname='Arial', fontsize=18, color='forestgreen', weight='bold')
             else :
-                ax.text(x, moyenne_hauteur-0.3, str(last_coef), ha='center', va='bottom', fontname='Arial', fontsize=14, color='black', weight='bold')
+                ax.text(x, moyenne_hauteur-0.5, str(last_coef), ha='center', va='bottom', fontname='Arial', fontsize=18, color='black', weight='bold')
 
     plt.axis('off')
     largeur_pouces = 80
     hauteur_pouces = 6
     fig = plt.gcf()
     fig.set_size_inches(largeur_pouces, hauteur_pouces)
-    plt.savefig(nom, transparent=True, dpi=300, bbox_inches='tight', format='png')
+    plt.savefig(nom, transparent=True, dpi=220, bbox_inches='tight', format='png')
 
 
 def combine_images (image1, image2):
@@ -416,13 +416,14 @@ if not os.path.exists(dossier_images):
 mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
 url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/le-verdon-sur-mer-1036/" 
 
+
 image_vide("1.png")
 for m in mois :
     print(m+" 2024")
-    image_mois(m+" 2024")
+    #image_mois(m+" 2024")
     draw(url+m+"-2024","IMAGES/"+m+"-2024.png")
 
-image_vide("2.png")
+#image_vide("2.png")
 image_vide("3.png")
 image_vide("4.png")
 
@@ -433,7 +434,7 @@ img = cv2.imread("out.png")
 hauteur, largeur, c = img.shape
 
 couleur_fond = (255, 255, 255)
-couleurs_pastel = [(193, 224, 235), (240, 188, 191), (210, 222, 207), (255, 213, 194)]
+couleurs_pastel = [(100,200,200),(150,200,200),(120,180,180), (95,200,200), (170,210,210)]
 for i in range(len(couleurs_pastel)):
     couleurs_pastel[i]=(couleurs_pastel[i][2], couleurs_pastel[i][1], couleurs_pastel[i][0])
 # Convertir les couleurs pastel en valeurs flottantes dans l'intervalle [0, 1]
@@ -465,7 +466,7 @@ cv2.imwrite("colors.png", image)
 
 # Charger les images RGBA et RGB
 image_rgba = cv2.imread('out.png', cv2.IMREAD_UNCHANGED)  # Assurez-vous que l'image RGBA est lue correctement (avec les 4 canaux)
-image_rgb = cv2.GaussianBlur(cv2.imread('colors.png'), (17,17), 0)
+image_rgb = cv2.imread('colors.png')
 
 
 # Extraire les canaux RGBA
