@@ -11,9 +11,10 @@ import re
 import math
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import os
+import shutil
 
 NB_MAREE = 124
-
+shutil.rmtree("IMAGES")
 
 
 semaine = ["lu", "ma", "me", "je", "ve", "sa", "di"]
@@ -53,7 +54,6 @@ def clean (soup) :
 
     # Joindre les contenus par des virgules pour créer la chaîne finale
     cleaned_text = ', '.join(span_contents)
-
     return cleaned_text
 
 
@@ -208,7 +208,7 @@ def draw(link, nom):
 
 
 
-    # Liste des hauteurs (exemples)
+    # Liste des hauteurs 
     hauteurs = np.zeros(NB_MAREE)
     for i in range(len(hauteurs)):
         if tab[i][2] is not None :
@@ -251,64 +251,65 @@ def draw(link, nom):
             ax.text(x, y+0.2, str(y)+"m", ha='center', va='bottom', fontname='Arial', fontsize=15, color='white', weight='bold')
         else :
             ax.text(x, y-0.2, str(y)+"m", ha='center', va='top', fontname='Arial', fontsize=15, color='white',weight='bold')
-    tmp = 0
-    ttmp = "t"
-    ttmp2 = "r"
+    line_index = 0
+    current_day = "t"
+    previous_day = "r"
     angle = 0
-    last =  0.0
-    last2 = 0.0
+    hauteur_précédente =  0.0
+    hauteur_précédente_2 = 0.0
     for x, y, h in zip(minutes, hauteurs, heures):
+        #ici, un cas pour quand on est en marée haute, un cas pour quand on est en marée basse. un pic sur 2 on écrit en dessus ou en dessous. 
         if y > moyenne_hauteur :
-            if tmp <= 1 :
-                last = hauteurs[tmp+4]+1.45
+            if line_index <= 1 :
+                hauteur_précédente = hauteurs[line_index+4]+1.45
             ax.text(x, y+0.6, h, ha='center', va='bottom', fontname='Arial', fontsize=15, color='black', weight='bold')
-            jour = tab[tmp][0]
-            if ttmp!= jour :
-                pt1 = (x, hauteurs[tmp])
+            jour = tab[line_index][0]
+            if current_day!= jour :
+                pt1 = (x, hauteurs[line_index])
                 pt2 = (0,0)
-                if tmp+4<len(minutes):
-                    pt2 = (minutes[tmp+4], hauteurs[tmp+4])
+                if line_index+4<len(minutes):
+                    pt2 = (minutes[line_index+4], hauteurs[line_index+4])
                 else :
-                    pt2 = (minutes[tmp], hauteurs[tmp])
+                    pt2 = (minutes[line_index], hauteurs[line_index])
                 angle = calculer_angle_entre_points(pt1, pt2)
-                ax.text((0.35+minutes[tmp]//1440)*1440, y+2.0, tab[tmp][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
-                x_points = [minutes[tmp]//1440*1440, ((minutes[tmp]//1440)+1)*1440]
-                if tmp+4<len(hauteurs):
-                    y_points = [hauteurs[tmp]+1.45, hauteurs[tmp+4]+1.45]
-                    if tmp>1:
-                        y_points = [last, hauteurs[tmp+4]+1.45]
-                        last = hauteurs[tmp+4]+1.45
+                ax.text((0.35+minutes[line_index]//1440)*1440, y+2.0, tab[line_index][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
+                x_points = [minutes[line_index]//1440*1440, ((minutes[line_index]//1440)+1)*1440]
+                if line_index+4<len(hauteurs):
+                    y_points = [hauteurs[line_index]+1.45, hauteurs[line_index+4]+1.45]
+                    if line_index>1:
+                        y_points = [hauteur_précédente, hauteurs[line_index+4]+1.45]
+                        hauteur_précédente = hauteurs[line_index+4]+1.45
                 else :
-                    y_points = [hauteurs[tmp]+1.45, hauteurs[tmp]+1.45]
+                    y_points = [hauteurs[line_index]+1.45, hauteurs[line_index]+1.45]
                 plot_line_with_dashes(x_points, y_points)
-            ttmp = jour
+            current_day = jour
         else :
-            if tmp <= 1 :
-                last2 = hauteurs[tmp+4]-1.45
+            if line_index <= 1 :
+                hauteur_précédente_2 = hauteurs[line_index+4]-1.45
             ax.text(x, y-1.0, h, ha='center', va='bottom', fontname='Arial', fontsize=15, color='black', weight='bold')
-            jour = tab[tmp][0]
-            if ttmp2!= jour :
-                pt1 = (x, hauteurs[tmp])
+            jour = tab[line_index][0]
+            if previous_day!= jour :
+                pt1 = (x, hauteurs[line_index])
                 pt2 = (0,0)
-                if tmp+4<len(minutes):
-                    pt2 = (minutes[tmp+4], hauteurs[tmp+4])
+                if line_index+4<len(minutes):
+                    pt2 = (minutes[line_index+4], hauteurs[line_index+4])
                 else :
-                    pt2 = (minutes[tmp], hauteurs[tmp])
+                    pt2 = (minutes[line_index], hauteurs[line_index])
                 angle = calculer_angle_entre_points(pt1, pt2)
-                ax.text((0.35+minutes[tmp]//1440)*1440, y-1.9, tab[tmp][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
-                x_points = [minutes[tmp]//1440*1440, ((minutes[tmp]//1440)+1)*1440]
+                ax.text((0.35+minutes[line_index]//1440)*1440, y-1.9, tab[line_index][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
+                x_points = [minutes[line_index]//1440*1440, ((minutes[line_index]//1440)+1)*1440]
                 if x_points[1] == 0.0:
                     x_points[1] = x_points[0]
-                if tmp+4<len(hauteurs):
-                    y_points = [hauteurs[tmp]-1.45, hauteurs[tmp+4]-1.45]
-                    if tmp>1:
-                        y_points = [last2, hauteurs[tmp+4]-1.45]
-                        last2 = hauteurs[tmp+4]-1.45
+                if line_index+4<len(hauteurs):
+                    y_points = [hauteurs[line_index]-1.45, hauteurs[line_index+4]-1.45]
+                    if line_index>1:
+                        y_points = [hauteur_précédente_2, hauteurs[line_index+4]-1.45]
+                        hauteur_précédente_2 = hauteurs[line_index+4]-1.45
                 else :
-                    y_points = [hauteurs[tmp]-1.45, hauteurs[tmp]-1.45]
+                    y_points = [hauteurs[line_index]-1.45, hauteurs[line_index]-1.45]
                 plot_line_with_dashes(x_points, y_points)
-            ttmp2 = jour
-        tmp = tmp+1
+            previous_day = jour
+        line_index = line_index+1
 
     last_coef = 0
     for i in range(5):
@@ -352,23 +353,6 @@ def combine_images (image1, image2):
     cv2.imwrite('image_superposee.png', overlay_with_alpha)
 
 
-def create_gradient_image(width, height):
-    # Créer une image vide avec des canaux B, G et R (valeurs 0)
-    gradient_image = np.zeros((height, width, 3), dtype=np.uint8)
-
-    # Créer un gradient vertical du jaune/vert au bleu marine
-    for y in range(height):
-        # Calculer la valeur de la couleur pour chaque ligne
-        blue_value = int(255 * y / height)
-        green_value = int(255 - (255 * y / height))
-
-        # Remplir la ligne avec la couleur calculée
-        gradient_image[y, :, 0] = blue_value  # Canal bleu
-        gradient_image[y, :, 1] = green_value  # Canal vert
-        gradient_image[y, :, 2] = 255  # Canal rouge (fixé à 255 pour avoir du jaune)
-
-    return gradient_image
-
 def image_vide(nom):
     image = np.zeros((300, 10, 4), dtype=np.uint8)
     image[:, :, 3] = 0
@@ -376,12 +360,13 @@ def image_vide(nom):
 
 
 def image_mois(text):
-    largeur = 18660
-    hauteur = 1375
+    #crée le nom du mois et année, #todo je voudrais le mettre à gauche des graphiques, peut etre incliné. peut etre sdans l'année. 
+    largeur = 13683
+    hauteur = 1300
     # Créer une nouvelle image RGBA (mode "RGBA" pour gérer la transparence)
     image = Image.new("RGBA", (largeur, hauteur), (255, 255, 255, 0))
     draw = ImageDraw.Draw(image)
-    x, y = 7930, 200
+    x, y = 4000, 200
     police = ImageFont.truetype("AmaticSC-Bold.ttf", 700)
     couleur_texte = (0, 0, 0, 255)
     draw.text((x, y), text, font=police, fill=couleur_texte)
@@ -413,14 +398,15 @@ if not os.path.exists(dossier_images):
     # Créer le dossier
     os.mkdir(dossier_images)
 
-mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
+# tous les mois sont pas en ligne, souvent y'a pas ceux passés et l'année d'après est pas forcémément déja la
+mois = ["juin", "juillet", "aout", "septembre"]
 url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/le-verdon-sur-mer-1036/" 
 
 
 image_vide("1.png")
 for m in mois :
     print(m+" 2024")
-    #image_mois(m+" 2024")
+    image_mois(m+" 2024")
     draw(url+m+"-2024","IMAGES/"+m+"-2024.png")
 
 #image_vide("2.png")
