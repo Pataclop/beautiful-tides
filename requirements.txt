@@ -1,0 +1,7 @@
+matplotlib
+numpy
+opencv-python
+requests
+beautifulsoup4
+unidecode
+Pillow
