@@ -56,7 +56,6 @@ def clean (soup) :
     cleaned_text = ', '.join(span_contents)
     return cleaned_text
 
-
 def remove_lines_until_marker(text, marker):
     lines = text.split("\n")
     output_lines = []
@@ -85,11 +84,21 @@ def remove_lines_after_marker(text, marker):
     return result
 
 def ligne_commence_par_mot(liste_mots, ligne):
+    """
+    Vérifie si une ligne de texte commence par un des mots de la liste donnée.
+
+    Paramètres :
+        liste_mots : liste de chaînes de caractères
+        ligne : chaîne de caractères
+
+    Retourne :
+        bool : True si la ligne commence par un des mots de la liste,
+               False sinon
+    """
     for mot in liste_mots:
         if ligne.startswith(mot):
             return True
     return False
-
 
 def calculer_angle_entre_points(point1, point2):
     # Extraire les coordonnées x et y de chaque point
@@ -111,7 +120,6 @@ def calculer_angle_entre_points(point1, point2):
     
     return angle_degrees
 
-
 def plot_line_with_dashes(x_points, y_points):
     linestyle = '--'
     plt.plot(x_points, y_points, linestyle=linestyle)
@@ -124,10 +132,8 @@ def convert_to_jours(jour_string):
     jour, nb = jour_string.split(' ')
     return int(nb)*1440
 
-
 def get_image_creation_time(image_path):
     return os.path.getctime(image_path)
-
 
 def stack_images_in_order(input_folder, output_filename):
     image_paths = sorted(Path(input_folder).glob("*.png"), key=get_image_creation_time)
@@ -150,14 +156,11 @@ def stack_images_in_order(input_folder, output_filename):
 
     cv2.imwrite(output_filename, stacked_image)
 
-
-def draw(link, nom):
-    response = requests.get(link)
+def recuperation_et_nettoyage_page_web(url):
+    response = requests.get(url)
     if response.status_code != 200:
         print("Error: %s" % response.status_code)
         exit(1)
-        
-        
         
     soup = BeautifulSoup(response.content, "html.parser")
     t = clean(soup)
@@ -177,7 +180,6 @@ def draw(link, nom):
     t = t.replace(" Lune :", "\nLune :")
     t = t.replace("\nCoucher\n", " ")
     t = t.replace("Lever\n", "Soleil : ")
-
     t = t.replace("lundi","lu")
     t = t.replace("mardi","ma")
     t = t.replace("mercredi", "me")
@@ -185,8 +187,10 @@ def draw(link, nom):
     t = t.replace("vendredi", "ve")
     t = t.replace("samedi", "sa")
     t = t.replace("dimanche", "di")
-        
-    lines = t.split('\n')
+    return t
+
+def draw(link, nom):
+    lines = recuperation_et_nettoyage_page_web(link).split('\n')
     tab = np.empty((NB_MAREE, 5), dtype=object)
     i = 0
     date = "rien 0"
@@ -205,7 +209,6 @@ def draw(link, nom):
             i=i+1
         if l.startswith("Lune"):
             tab[i-1][4] = l[7:]
-
 
 
     # Liste des hauteurs 
@@ -257,11 +260,12 @@ def draw(link, nom):
     angle = 0
     hauteur_précédente =  0.0
     hauteur_précédente_2 = 0.0
+    décalage_hauteur_petits_traits = 1.45
     for x, y, h in zip(minutes, hauteurs, heures):
         #ici, un cas pour quand on est en marée haute, un cas pour quand on est en marée basse. un pic sur 2 on écrit en dessus ou en dessous. 
         if y > moyenne_hauteur :
             if line_index <= 1 :
-                hauteur_précédente = hauteurs[line_index+4]+1.45
+                hauteur_précédente = hauteurs[line_index+4]+décalage_hauteur_petits_traits
             ax.text(x, y+0.6, h, ha='center', va='bottom', fontname='Arial', fontsize=15, color='black', weight='bold')
             jour = tab[line_index][0]
             if current_day!= jour :
@@ -275,17 +279,17 @@ def draw(link, nom):
                 ax.text((0.35+minutes[line_index]//1440)*1440, y+2.0, tab[line_index][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
                 x_points = [minutes[line_index]//1440*1440, ((minutes[line_index]//1440)+1)*1440]
                 if line_index+4<len(hauteurs):
-                    y_points = [hauteurs[line_index]+1.45, hauteurs[line_index+4]+1.45]
+                    y_points = [hauteurs[line_index]+décalage_hauteur_petits_traits, hauteurs[line_index+4]+décalage_hauteur_petits_traits]
                     if line_index>1:
-                        y_points = [hauteur_précédente, hauteurs[line_index+4]+1.45]
-                        hauteur_précédente = hauteurs[line_index+4]+1.45
+                        y_points = [hauteur_précédente, hauteurs[line_index+4]+décalage_hauteur_petits_traits]
+                        hauteur_précédente = hauteurs[line_index+4]+décalage_hauteur_petits_traits
                 else :
-                    y_points = [hauteurs[line_index]+1.45, hauteurs[line_index]+1.45]
+                    y_points = [hauteurs[line_index]+décalage_hauteur_petits_traits, hauteurs[line_index]+décalage_hauteur_petits_traits]
                 plot_line_with_dashes(x_points, y_points)
             current_day = jour
         else :
             if line_index <= 1 :
-                hauteur_précédente_2 = hauteurs[line_index+4]-1.45
+                hauteur_précédente_2 = hauteurs[line_index+4]-décalage_hauteur_petits_traits
             ax.text(x, y-1.0, h, ha='center', va='bottom', fontname='Arial', fontsize=15, color='black', weight='bold')
             jour = tab[line_index][0]
             if previous_day!= jour :
@@ -301,12 +305,12 @@ def draw(link, nom):
                 if x_points[1] == 0.0:
                     x_points[1] = x_points[0]
                 if line_index+4<len(hauteurs):
-                    y_points = [hauteurs[line_index]-1.45, hauteurs[line_index+4]-1.45]
+                    y_points = [hauteurs[line_index]-décalage_hauteur_petits_traits, hauteurs[line_index+4]-décalage_hauteur_petits_traits]
                     if line_index>1:
-                        y_points = [hauteur_précédente_2, hauteurs[line_index+4]-1.45]
-                        hauteur_précédente_2 = hauteurs[line_index+4]-1.45
+                        y_points = [hauteur_précédente_2, hauteurs[line_index+4]-décalage_hauteur_petits_traits]
+                        hauteur_précédente_2 = hauteurs[line_index+4]-décalage_hauteur_petits_traits
                 else :
-                    y_points = [hauteurs[line_index]-1.45, hauteurs[line_index]-1.45]
+                    y_points = [hauteurs[line_index]-décalage_hauteur_petits_traits, hauteurs[line_index]-décalage_hauteur_petits_traits]
                 plot_line_with_dashes(x_points, y_points)
             previous_day = jour
         line_index = line_index+1
@@ -333,7 +337,6 @@ def draw(link, nom):
     fig.set_size_inches(largeur_pouces, hauteur_pouces)
     plt.savefig(nom, transparent=True, dpi=220, bbox_inches='tight', format='png')
 
-
 def combine_images (image1, image2):
     if image1.shape != image2.shape:
         raise ValueError("Les images doivent avoir la même taille et le même nombre de canaux.")
@@ -352,12 +355,18 @@ def combine_images (image1, image2):
     # Enregistrer l'image résultante
     cv2.imwrite('image_superposee.png', overlay_with_alpha)
 
-
 def image_vide(nom):
-    image = np.zeros((300, 10, 4), dtype=np.uint8)
-    image[:, :, 3] = 0
-    cv2.imwrite("IMAGES/"+nom, image)
+    """Crée une image vide en RGBA et l'enregistre sous le nom spécifié. utile pour espacer les images des bords haut et bas de l'image finale lors de l'assemblage
 
+    La taille de l'image est fixée à 300 pixels de large sur 10 pixels de haut,
+    et le canal alpha est initialisé à 0 pour une transparence complète.
+
+    Args:
+        nom (str): Nom du fichier de sortie.
+    """
+    image = np.zeros((300, 10, 4), dtype=np.uint8)
+    image[:, :, 3] = 0  # Canal alpha à 0 pour une transparence complète
+    cv2.imwrite("IMAGES/"+nom, image)
 
 def image_mois(text):
     #crée le nom du mois et année, #todo je voudrais le mettre à gauche des graphiques, peut etre incliné. peut etre sdans l'année. 
@@ -371,7 +380,6 @@ def image_mois(text):
     couleur_texte = (0, 0, 0, 255)
     draw.text((x, y), text, font=police, fill=couleur_texte)
     image.save("IMAGES/"+text+".png")
-
 
 def stack_images(image1_path, image2_path, output_path):
     # Ouvrir les images avec Pillow
@@ -391,6 +399,56 @@ def stack_images(image1_path, image2_path, output_path):
 
     # Enregistrer le résultat dans un nouveau fichier
     stacked_image.save(output_path)
+
+def creee_image_fond(height, width):
+    """Crée une image de fond avec une gradient de couleurs pastel
+
+    Args:
+        height (int): Hauteur de l'image de fond
+        width (int): Largeur de l'image de fond
+
+    Returns:
+        image (numpy.ndarray): Image de fond avec une gradient de couleurs pastel
+    """
+    # Couleur de fond en type RGB
+    background_color = (255, 255, 255)
+    # Couleurs pastel en type RGB
+    pastel_colors = [(100, 200, 200), (150, 200, 200), (120, 180, 180), (95, 200, 200), (170, 210, 210)]
+    # Inverser l'ordre des composantes des couleurs pastel pour les convertir en type BGR
+    for i in range(len(pastel_colors)):
+        pastel_colors[i] = (pastel_colors[i][2], pastel_colors[i][1], pastel_colors[i][0])
+    # Convertir les couleurs pastel en valeurs flottantes dans l'intervalle [0, 1]
+    colors = [tuple(np.array(c) / 255.0) for c in pastel_colors]
+
+    # Créer une image de fond blanche
+    image = np.ones((height, width, 3), dtype=np.float32) * background_color
+
+    nb_zigzags_per_line = height // 500
+    zigzag_width = width // 9
+    zigzag_height = height // nb_zigzags_per_line
+    zigzag_thickness = height // (nb_zigzags_per_line)
+
+    for i in range(nb_zigzags_per_line):
+        # Coordonnées du premier point du zigzag
+        y = i * zigzag_height
+        color = colors[i % len(colors)]
+
+        for x in range(0, width, zigzag_width):
+            # Si le zigzag est impair
+            if x % (2 * zigzag_width) == 0:
+                # Dessiner un zigzag dans le sens horaire
+                cv2.line(image, (x, y), (x + zigzag_width, y + zigzag_height), color, zigzag_thickness)
+            # Si le zigzag est pair
+            else:
+                # Dessiner un zigzag dans le sens anti-horaire
+                cv2.line(image, (x, y + zigzag_height), (x + zigzag_width, y), color, zigzag_thickness)
+
+    # Convertir l'image en type np.uint8
+    image = (image * 255).astype(np.uint8)
+
+    cv2.imwrite("colors.png", image)
+
+
 
 dossier_images = "IMAGES"
 
@@ -419,36 +477,7 @@ stack_images_in_order("IMAGES", "out.png")
 img = cv2.imread("out.png")
 hauteur, largeur, c = img.shape
 
-couleur_fond = (255, 255, 255)
-couleurs_pastel = [(100,200,200),(150,200,200),(120,180,180), (95,200,200), (170,210,210)]
-for i in range(len(couleurs_pastel)):
-    couleurs_pastel[i]=(couleurs_pastel[i][2], couleurs_pastel[i][1], couleurs_pastel[i][0])
-# Convertir les couleurs pastel en valeurs flottantes dans l'intervalle [0, 1]
-couleurs = [tuple(np.array(c) / 255.0) for c in couleurs_pastel]
-
-image = np.ones((hauteur, largeur, 3), dtype=np.float32) * couleur_fond
-
-nombre_zigzags = hauteur//500
-largeur_zigzag = largeur//9
-hauteur_zigzag = hauteur // nombre_zigzags
-epaisseur_zigzag = hauteur//(nombre_zigzags)
-
-for i in range(nombre_zigzags):
-    y = i * hauteur_zigzag
-    couleur = couleurs[i % len(couleurs)]
-
-    for x in range(0, largeur, largeur_zigzag):
-        if x % (2 * largeur_zigzag) == 0:
-            cv2.line(image, (x, y), (x + largeur_zigzag, y + hauteur_zigzag), couleur, epaisseur_zigzag)
-        else:
-            cv2.line(image, (x, y + hauteur_zigzag), (x + largeur_zigzag, y), couleur, epaisseur_zigzag)
-
-# Convertir l'image en type np.uint8 pour l'affichage
-image = (image * 255).astype(np.uint8)
-
-cv2.imwrite("colors.png", image)
-
-
+creee_image_fond(hauteur, largeur)
 
 # Charger les images RGBA et RGB
 image_rgba = cv2.imread('out.png', cv2.IMREAD_UNCHANGED)  # Assurez-vous que l'image RGBA est lue correctement (avec les 4 canaux)
@@ -470,7 +499,5 @@ updated_blue = (blue * alpha_factor + image_rgb[:, :, 0] * (1 - alpha_factor)).a
 # Fusionner les canaux mis à jour en une seule image RGB
 merged_image = cv2.merge([updated_blue, updated_green, updated_red])
 
-# Afficher ou enregistrer l'image finale
 
-# Pour enregistrer l'image finale
 cv2.imwrite('image_fusionnee.png', merged_image)
