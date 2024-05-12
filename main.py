@@ -14,10 +14,16 @@ import os
 import shutil
 
 NB_MAREE = 124
-shutil.rmtree("IMAGES")
-
+fancy_font = "AmaticSC-Bold.ttf"
+regular_font = "Arial"
 
 semaine = ["lu", "ma", "me", "je", "ve", "sa", "di"]
+dossier_images = "IMAGES"
+
+if os.path.exists(dossier_images):
+    shutil.rmtree(dossier_images)
+
+os.mkdir(dossier_images)
 
 def aligne_basse(chaine):
     # Créer un modèle de regex pour trouver "Maree basse" suivie de la prochaine lettre "M" ou "L"
@@ -189,6 +195,65 @@ def recuperation_et_nettoyage_page_web(url):
     t = t.replace("dimanche", "di")
     return t
 
+
+
+
+
+
+from PIL import Image, ImageDraw, ImageFont, ImageOps
+
+def write_text_on_image(image_path, text, angle, position, font_name, font_size):
+    fill=(255,255,255,255)
+    background_color=(0,0,0,0)
+    # Chargement de l'image
+    im = Image.open(image_path)
+
+        
+    font = ImageFont.truetype(font_name, font_size)
+
+    
+    # Création d'une nouvelle image pour écrire le texte
+    txt = Image.new("RGBA", (im.height,im.height), background_color)
+    d = ImageDraw.Draw(txt)
+    d.text((200, 0), text, font=font, fill=fill)
+    
+    # Rotation de l'image contenant le texte
+    w = txt.rotate(angle, expand=1)
+    
+    # Conversion de l'image en mode "RGBA"
+    w = w.convert("RGBA")
+    
+    # Superposition de l'image contenant le texte sur l'image originale
+    im.paste(w, position, w)
+    
+    # Enregistrement de l'image modifiée
+    im.save(image_path)
+
+# Exemple d'utilisation
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def draw(link, nom):
     lines = recuperation_et_nettoyage_page_web(link).split('\n')
     tab = np.empty((NB_MAREE, 5), dtype=object)
@@ -251,9 +316,9 @@ def draw(link, nom):
 
     for x, y in zip(minutes, hauteurs):
         if y > moyenne_hauteur :
-            ax.text(x, y+0.2, str(y)+"m", ha='center', va='bottom', fontname='Arial', fontsize=15, color='white', weight='bold')
+            ax.text(x, y+0.2, str(y)+"m", ha='center', va='bottom', fontname=regular_font, fontsize=15, color='white', weight='bold')
         else :
-            ax.text(x, y-0.2, str(y)+"m", ha='center', va='top', fontname='Arial', fontsize=15, color='white',weight='bold')
+            ax.text(x, y-0.2, str(y)+"m", ha='center', va='top', fontname=regular_font, fontsize=15, color='white',weight='bold')
     line_index = 0
     current_day = "t"
     previous_day = "r"
@@ -266,7 +331,7 @@ def draw(link, nom):
         if y > moyenne_hauteur :
             if line_index <= 1 :
                 hauteur_précédente = hauteurs[line_index+4]+décalage_hauteur_petits_traits
-            ax.text(x, y+0.6, h, ha='center', va='bottom', fontname='Arial', fontsize=15, color='black', weight='bold')
+            ax.text(x, y+0.6, h, ha='center', va='bottom', fontname=regular_font, fontsize=15, color='black', weight='bold')
             jour = tab[line_index][0]
             if current_day!= jour :
                 pt1 = (x, hauteurs[line_index])
@@ -290,7 +355,7 @@ def draw(link, nom):
         else :
             if line_index <= 1 :
                 hauteur_précédente_2 = hauteurs[line_index+4]-décalage_hauteur_petits_traits
-            ax.text(x, y-1.0, h, ha='center', va='bottom', fontname='Arial', fontsize=15, color='black', weight='bold')
+            ax.text(x, y-1.0, h, ha='center', va='bottom', fontname=regular_font, fontsize=15, color='black', weight='bold')
             jour = tab[line_index][0]
             if previous_day!= jour :
                 pt1 = (x, hauteurs[line_index])
@@ -324,11 +389,11 @@ def draw(link, nom):
             last_coef = c
         if y > moyenne_hauteur :
             if int(last_coef) > 95 :
-                ax.text(x, moyenne_hauteur-0.5, str(last_coef), ha='center', va='bottom', fontname='Arial', fontsize=18, color='red', weight='bold')
+                ax.text(x, moyenne_hauteur-0.5, str(last_coef), ha='center', va='bottom', fontname=regular_font, fontsize=18, color='red', weight='bold')
             elif int(last_coef) < 35 :
-                ax.text(x, moyenne_hauteur-0.5, str(last_coef), ha='center', va='bottom', fontname='Arial', fontsize=18, color='forestgreen', weight='bold')
+                ax.text(x, moyenne_hauteur-0.5, str(last_coef), ha='center', va='bottom', fontname=regular_font, fontsize=18, color='forestgreen', weight='bold')
             else :
-                ax.text(x, moyenne_hauteur-0.5, str(last_coef), ha='center', va='bottom', fontname='Arial', fontsize=18, color='black', weight='bold')
+                ax.text(x, moyenne_hauteur-0.5, str(last_coef), ha='center', va='bottom', fontname=regular_font, fontsize=18, color='black', weight='bold')
 
     plt.axis('off')
     largeur_pouces = 80
@@ -336,6 +401,23 @@ def draw(link, nom):
     fig = plt.gcf()
     fig.set_size_inches(largeur_pouces, hauteur_pouces)
     plt.savefig(nom, transparent=True, dpi=220, bbox_inches='tight', format='png')
+
+    image = cv2.imread(nom, cv2.IMREAD_UNCHANGED)
+    
+    # Extraire la largeur et la hauteur de l'image d'entrée
+    height, width, _ = image.shape
+        
+    # Créer une image vide avec la largeur de sortie
+    padded_image = np.zeros((height, (height+width), 4), dtype=np.uint8)
+    
+    # Copier l'image d'entrée à droite avec un espace vide à gauche
+    padded_image[:, height:] = image
+    
+    # Enregistrer l'image résultante
+    cv2.imwrite(nom, padded_image)
+    write_text_on_image(nom, nom[7:-9], 30, (242, 60), fancy_font, 275)
+
+
 
 def combine_images (image1, image2):
     if image1.shape != image2.shape:
@@ -368,18 +450,7 @@ def image_vide(nom):
     image[:, :, 3] = 0  # Canal alpha à 0 pour une transparence complète
     cv2.imwrite("IMAGES/"+nom, image)
 
-def image_mois(text):
-    #crée le nom du mois et année, #todo je voudrais le mettre à gauche des graphiques, peut etre incliné. peut etre sdans l'année. 
-    largeur = 13683
-    hauteur = 1300
-    # Créer une nouvelle image RGBA (mode "RGBA" pour gérer la transparence)
-    image = Image.new("RGBA", (largeur, hauteur), (255, 255, 255, 0))
-    draw = ImageDraw.Draw(image)
-    x, y = 4000, 200
-    police = ImageFont.truetype("AmaticSC-Bold.ttf", 700)
-    couleur_texte = (0, 0, 0, 255)
-    draw.text((x, y), text, font=police, fill=couleur_texte)
-    image.save("IMAGES/"+text+".png")
+
 
 def stack_images(image1_path, image2_path, output_path):
     # Ouvrir les images avec Pillow
@@ -450,11 +521,7 @@ def creee_image_fond(height, width):
 
 
 
-dossier_images = "IMAGES"
 
-if not os.path.exists(dossier_images):
-    # Créer le dossier
-    os.mkdir(dossier_images)
 
 # tous les mois sont pas en ligne, souvent y'a pas ceux passés et l'année d'après est pas forcémément déja la
 mois = ["juin", "juillet", "aout", "septembre"]
@@ -464,7 +531,6 @@ url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/le-verdon
 image_vide("1.png")
 for m in mois :
     print(m+" 2024")
-    image_mois(m+" 2024")
     draw(url+m+"-2024","IMAGES/"+m+"-2024.png")
 
 #image_vide("2.png")
