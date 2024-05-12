@@ -4,8 +4,7 @@ from PyQt5.QtGui import QPixmap, QWheelEvent, QColor
 from PyQt5.QtCore import Qt
 from urllib.request import urlopen
 import requests
-
-
+import fonctions
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -20,7 +19,7 @@ class MainWindow(QMainWindow):
 
         self.year_selector = QListWidget()
         self.year_selector.setFixedWidth(50)
-        self.year_selector.addItems(["2022", "2023", "2024"]) # Ajoutez d'autres années si nécessaire
+        self.year_selector.addItems(["2024", "2025", "2026"]) # Ajoutez d'autres années si nécessaire
         self.year_selector.itemSelectionChanged.connect(self.on_month_selection_changed)
 
 
@@ -28,14 +27,6 @@ class MainWindow(QMainWindow):
         self.month_list.setFixedWidth(100)
         self.month_list.addItems(["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"])
         self.month_list.setSelectionMode(QAbstractItemView.MultiSelection)
-
-        
-
-    
-
-        
-        
-
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setFixedWidth(1500)
@@ -45,14 +36,12 @@ class MainWindow(QMainWindow):
         self.image_label = QLabel()
         self.scroll_area.setWidget(self.image_label)
 
-        self.refresh_button = QPushButton("Rafraîchir")
+        self.refresh_button = QPushButton("pas utile pour l'instant")
         self.refresh_button.clicked.connect(self.refresh_image)
 
 
-        self.print_button = QPushButton("print les mois")
+        self.print_button = QPushButton("Créer avec les mois sélectionnés")
         self.print_button.clicked.connect(self.print_selected_months)
-
-
 
         self.layout.addWidget(self.year_selector)
         self.layout.addWidget(self.month_list)
@@ -63,11 +52,10 @@ class MainWindow(QMainWindow):
         self.image_layout.addWidget(self.print_button)
 
         self.layout.addLayout(self.image_layout)
-
     
     def print_selected_months(self):
         selected_months = [self.month_list.item(i).text() for i in range(self.month_list.count()) if self.month_list.item(i).isSelected()]
-        print(selected_months)
+        fonctions.creation_image_complete(selected_months)
 
     def on_month_selection_changed(self):
         selected_months = [self.month_list.item(i).text() for i in range(self.month_list.count()) if self.month_list.item(i).isSelected()]
@@ -82,6 +70,7 @@ class MainWindow(QMainWindow):
             print (url)
             try:
                 response = requests.head(url)
+                #TODO améliorer la vérification des pages web existantes ou non. là ca marche pas pour les années suivantes puisque la page existe souvent mais n'est pas remplie. il faudrait tester si la page est remplie.
                 if response.status_code == 200:
                     print("ok")
                     item.setForeground(QColor("green"))
@@ -98,9 +87,6 @@ class MainWindow(QMainWindow):
         pixmap = QPixmap(image_path)
         self.image_label.setPixmap(pixmap)
         self.scroll_area.ensureWidgetVisible(self.image_label)
-
-
-
 
 
 if __name__ == "__main__":

@@ -3,3 +3,4 @@
 *.jpg
 .DS_Store
 *.txt
+__pycache__/fonctions.cpython-310.pyc
