@@ -196,21 +196,11 @@ def recuperation_et_nettoyage_page_web(url):
     return t
 
 
-
-
-
-
-from PIL import Image, ImageDraw, ImageFont, ImageOps
-
 def write_text_on_image(image_path, text, angle, position, font_name, font_size):
     fill=(255,255,255,255)
     background_color=(0,0,0,0)
-    # Chargement de l'image
     im = Image.open(image_path)
-
-        
     font = ImageFont.truetype(font_name, font_size)
-
     
     # Création d'une nouvelle image pour écrire le texte
     txt = Image.new("RGBA", (im.height,im.height), background_color)
@@ -226,30 +216,7 @@ def write_text_on_image(image_path, text, angle, position, font_name, font_size)
     # Superposition de l'image contenant le texte sur l'image originale
     im.paste(w, position, w)
     
-    # Enregistrement de l'image modifiée
     im.save(image_path)
-
-# Exemple d'utilisation
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
