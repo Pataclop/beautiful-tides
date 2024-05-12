@@ -215,7 +215,6 @@ def write_text_on_image(image_path, text, angle, position, font_name, font_size)
     
     # Superposition de l'image contenant le texte sur l'image originale
     im.paste(w, position, w)
-    
     im.save(image_path)
 
 
@@ -351,16 +350,19 @@ def draw(link, nom):
     for i in range(5):
         if coeficient[i] is not None and int(coeficient[i]) >10:
             last_coef = coeficient[i]   
+    
+    def couleur_coefficient(couleur):
+        ax.text(x, moyenne_hauteur-0.5, str(last_coef), ha='center', va='bottom', fontname=regular_font, fontsize=18, color=couleur, weight='bold')
     for x, y, c in zip(minutes, hauteurs, coeficient):
         if c is not None and int(c) > 10 :
             last_coef = c
         if y > moyenne_hauteur :
             if int(last_coef) > 95 :
-                ax.text(x, moyenne_hauteur-0.5, str(last_coef), ha='center', va='bottom', fontname=regular_font, fontsize=18, color='red', weight='bold')
+                couleur_coefficient('red')
             elif int(last_coef) < 35 :
-                ax.text(x, moyenne_hauteur-0.5, str(last_coef), ha='center', va='bottom', fontname=regular_font, fontsize=18, color='forestgreen', weight='bold')
+                couleur_coefficient('forestgreen')
             else :
-                ax.text(x, moyenne_hauteur-0.5, str(last_coef), ha='center', va='bottom', fontname=regular_font, fontsize=18, color='black', weight='bold')
+                couleur_coefficient('black')
 
     plt.axis('off')
     largeur_pouces = 80
