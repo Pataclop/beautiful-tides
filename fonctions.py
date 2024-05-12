@@ -20,10 +20,13 @@ regular_font = "Arial"
 semaine = ["lu", "ma", "me", "je", "ve", "sa", "di"]
 dossier_images = "IMAGES"
 
-if os.path.exists(dossier_images):
-    shutil.rmtree(dossier_images)
+def cree_dossier_images():
+    if os.path.exists(dossier_images):
+        shutil.rmtree(dossier_images)
 
-os.mkdir(dossier_images)
+    os.mkdir(dossier_images)
+
+
 
 def aligne_basse(chaine):
     # Créer un modèle de regex pour trouver "Maree basse" suivie de la prochaine lettre "M" ou "L"
@@ -195,7 +198,6 @@ def recuperation_et_nettoyage_page_web(url):
     t = t.replace("dimanche", "di")
     return t
 
-
 def write_text_on_image(image_path, text, angle, position, font_name, font_size):
     fill=(255,255,255,255)
     background_color=(0,0,0,0)
@@ -216,9 +218,6 @@ def write_text_on_image(image_path, text, angle, position, font_name, font_size)
     # Superposition de l'image contenant le texte sur l'image originale
     im.paste(w, position, w)
     im.save(image_path)
-
-
-
 
 def draw(link, nom):
     lines = recuperation_et_nettoyage_page_web(link).split('\n')
@@ -387,8 +386,6 @@ def draw(link, nom):
     cv2.imwrite(nom, padded_image)
     write_text_on_image(nom, nom[7:-9], 30, (242, 60), fancy_font, 275)
 
-
-
 def combine_images (image1, image2):
     if image1.shape != image2.shape:
         raise ValueError("Les images doivent avoir la même taille et le même nombre de canaux.")
@@ -419,8 +416,6 @@ def image_vide(nom):
     image = np.zeros((300, 10, 4), dtype=np.uint8)
     image[:, :, 3] = 0  # Canal alpha à 0 pour une transparence complète
     cv2.imwrite("IMAGES/"+nom, image)
-
-
 
 def stack_images(image1_path, image2_path, output_path):
     # Ouvrir les images avec Pillow
@@ -489,51 +484,55 @@ def creee_image_fond(height, width):
 
     cv2.imwrite("colors.png", image)
 
+def creation_image_complete(mois):
+
+    cree_dossier_images()
+
+    # tous les mois sont pas en ligne, souvent y'a pas ceux passés et l'année d'après est pas forcémément déja la
+    url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/le-verdon-sur-mer-1036/" 
+
+
+    image_vide("1.png")
+    for m in mois :
+        print(m+" 2024")
+        draw(url+m+"-2024","IMAGES/"+m+"-2024.png")
+
+    #image_vide("2.png")
+    image_vide("3.png")
+    image_vide("4.png")
+
+    stack_images_in_order("IMAGES", "out.png")
+
+    img = cv2.imread("out.png")
+    hauteur, largeur, c = img.shape
+
+    creee_image_fond(hauteur, largeur)
+
+    # Charger les images RGBA et RGB
+    image_rgba = cv2.imread('out.png', cv2.IMREAD_UNCHANGED)  # Assurez-vous que l'image RGBA est lue correctement (avec les 4 canaux)
+    image_rgb = cv2.imread('colors.png')
+
+    # Extraire les canaux RGBA
+    rgba_channels = cv2.split(image_rgba)
+    blue, green, red, alpha = rgba_channels
+
+    # Convertir le canal alpha en un facteur de dilution (valeur entre 0 et 1)
+    alpha_factor = alpha.astype(float) / 255.0
+
+    # Mettre à jour les canaux RGB en utilisant le canal alpha comme facteur de dilution
+    updated_red = (red * alpha_factor + image_rgb[:, :, 2] * (1 - alpha_factor)).astype(np.uint8)
+    updated_green = (green * alpha_factor + image_rgb[:, :, 1] * (1 - alpha_factor)).astype(np.uint8)
+    updated_blue = (blue * alpha_factor + image_rgb[:, :, 0] * (1 - alpha_factor)).astype(np.uint8)
+
+    # Fusionner les canaux mis à jour en une seule image RGB
+    merged_image = cv2.merge([updated_blue, updated_green, updated_red])
+
+
+    cv2.imwrite('image_fusionnee.png', merged_image)
+    print("FINITO")
 
 
 
-
-# tous les mois sont pas en ligne, souvent y'a pas ceux passés et l'année d'après est pas forcémément déja la
-mois = ["juin", "juillet", "aout", "septembre"]
-url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/le-verdon-sur-mer-1036/" 
-
-
-image_vide("1.png")
-for m in mois :
-    print(m+" 2024")
-    draw(url+m+"-2024","IMAGES/"+m+"-2024.png")
-
-#image_vide("2.png")
-image_vide("3.png")
-image_vide("4.png")
-
-
-stack_images_in_order("IMAGES", "out.png")
-
-img = cv2.imread("out.png")
-hauteur, largeur, c = img.shape
-
-creee_image_fond(hauteur, largeur)
-
-# Charger les images RGBA et RGB
-image_rgba = cv2.imread('out.png', cv2.IMREAD_UNCHANGED)  # Assurez-vous que l'image RGBA est lue correctement (avec les 4 canaux)
-image_rgb = cv2.imread('colors.png')
-
-
-# Extraire les canaux RGBA
-rgba_channels = cv2.split(image_rgba)
-blue, green, red, alpha = rgba_channels
-
-# Convertir le canal alpha en un facteur de dilution (valeur entre 0 et 1)
-alpha_factor = alpha.astype(float) / 255.0
-
-# Mettre à jour les canaux RGB en utilisant le canal alpha comme facteur de dilution
-updated_red = (red * alpha_factor + image_rgb[:, :, 2] * (1 - alpha_factor)).astype(np.uint8)
-updated_green = (green * alpha_factor + image_rgb[:, :, 1] * (1 - alpha_factor)).astype(np.uint8)
-updated_blue = (blue * alpha_factor + image_rgb[:, :, 0] * (1 - alpha_factor)).astype(np.uint8)
-
-# Fusionner les canaux mis à jour en une seule image RGB
-merged_image = cv2.merge([updated_blue, updated_green, updated_red])
-
-
-cv2.imwrite('image_fusionnee.png', merged_image)
+if __name__ == "__main__":
+    mois = ["juin", "juillet", "aout", "septembre"]
+    creation_image_complete(mois)
