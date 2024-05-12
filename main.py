@@ -275,7 +275,7 @@ def draw(link, nom):
     # Créer la figure et les axes
     fig, ax = plt.subplots()
 
-    # Tracer les hauteurs sous forme de segments noirs
+    # Tracer les hauteurs sous forme de segments noirs inclinés
     for i in range(len(hauteurs) - 1):
         ax.plot([minutes[i], minutes[i+1]], [hauteurs[i], hauteurs[i+1]], color='black', linewidth=6)
 
@@ -289,6 +289,7 @@ def draw(link, nom):
     current_day = "t"
     previous_day = "r"
     angle = 0
+    minutes_dans_journée = 1440
     hauteur_précédente =  0.0
     hauteur_précédente_2 = 0.0
     décalage_hauteur_petits_traits = 1.45
@@ -307,8 +308,8 @@ def draw(link, nom):
                 else :
                     pt2 = (minutes[line_index], hauteurs[line_index])
                 angle = calculer_angle_entre_points(pt1, pt2)
-                ax.text((0.35+minutes[line_index]//1440)*1440, y+2.0, tab[line_index][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
-                x_points = [minutes[line_index]//1440*1440, ((minutes[line_index]//1440)+1)*1440]
+                ax.text((0.35+minutes[line_index]//minutes_dans_journée)*minutes_dans_journée, y+2.0, tab[line_index][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
+                x_points = [minutes[line_index]//minutes_dans_journée*minutes_dans_journée, ((minutes[line_index]//minutes_dans_journée)+1)*minutes_dans_journée]
                 if line_index+4<len(hauteurs):
                     y_points = [hauteurs[line_index]+décalage_hauteur_petits_traits, hauteurs[line_index+4]+décalage_hauteur_petits_traits]
                     if line_index>1:
@@ -331,8 +332,8 @@ def draw(link, nom):
                 else :
                     pt2 = (minutes[line_index], hauteurs[line_index])
                 angle = calculer_angle_entre_points(pt1, pt2)
-                ax.text((0.35+minutes[line_index]//1440)*1440, y-1.9, tab[line_index][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
-                x_points = [minutes[line_index]//1440*1440, ((minutes[line_index]//1440)+1)*1440]
+                ax.text((0.35+minutes[line_index]//minutes_dans_journée)*minutes_dans_journée, y-1.9, tab[line_index][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
+                x_points = [minutes[line_index]//minutes_dans_journée*minutes_dans_journée, ((minutes[line_index]//minutes_dans_journée)+1)*minutes_dans_journée]
                 if x_points[1] == 0.0:
                     x_points[1] = x_points[0]
                 if line_index+4<len(hauteurs):
