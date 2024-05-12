@@ -60,6 +60,8 @@ class MainWindow(QMainWindow):
         self.image_layout = QVBoxLayout()
         self.image_layout.addWidget(self.scroll_area)
         self.image_layout.addWidget(self.refresh_button)
+        self.image_layout.addWidget(self.print_button)
+
         self.layout.addLayout(self.image_layout)
 
     
@@ -97,26 +99,7 @@ class MainWindow(QMainWindow):
         self.image_label.setPixmap(pixmap)
         self.scroll_area.ensureWidgetVisible(self.image_label)
 
-    def wheelEvent(self, event: QWheelEvent):
-        # Coefficients de zoom pour définir l'ampleur du zoom
-        zoom_in_factor = 1.1
-        zoom_out_factor = 0.9
 
-        if event.angleDelta().y() > 0:
-            # Zoom avant
-            self.scroll_area.scale(zoom_in_factor, zoom_in_factor)
-        else:
-            # Zoom arrière
-            self.scroll_area.scale(zoom_out_factor, zoom_out_factor)
-
-        self.scroll_area.ensureVisible(self.image_label)
-
-    def url_exists(self, url):
-        try:
-            urlopen(url)
-            return True
-        except:
-            return False
 
 
 
