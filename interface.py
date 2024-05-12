@@ -17,11 +17,14 @@ class MainWindow(QMainWindow):
 
         self.layout = QHBoxLayout(self.central_widget)
 
+    #TODO il faudrait un truc pour sélectionner le port (voir le nom exact sur le site météo)
+
         self.year_selector = QListWidget()
         self.year_selector.setFixedWidth(50)
         self.year_selector.addItems(["2024", "2025", "2026"]) # Ajoutez d'autres années si nécessaire
         self.year_selector.itemSelectionChanged.connect(self.on_month_selection_changed)
 
+    #TODO il faudrait un truc pour savoir dans quel ordre se servir des trucs. 1 - port   2- année   3- mois   4- créer
 
         self.month_list = QListWidget()
         self.month_list.setFixedWidth(100)
@@ -46,6 +49,10 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(self.year_selector)
         self.layout.addWidget(self.month_list)
         
+
+#TODO faut un affichage d'un mois dans l'interface. Et des parametres pour personaliser un peu l'affichage. des optiopns (lune, saint, jsp), la police et la taile des éléments. 
+#que tout soit personalisable. les couleurs aussi éventuellement. c'est une grosse interface mais c'estr bien quand meme. 
+
         self.image_layout = QVBoxLayout()
         self.image_layout.addWidget(self.scroll_area)
         self.image_layout.addWidget(self.refresh_button)
