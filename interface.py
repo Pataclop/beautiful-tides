@@ -55,7 +55,7 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(self.month_list)
         
 
-#TODO faut un affichage d'un mois dans l'interface. Et des parametres pour personaliser un peu l'affichage. des optiopns (lune, saint, jsp), la police et la taile des éléments. 
+#TODO il faut parametres pour personaliser un peu l'affichage. des optiopns (lune, saint, jsp), la police et la taile des éléments. 
 #que tout soit personalisable. les couleurs aussi éventuellement. c'est une grosse interface mais c'estr bien quand meme. 
 
         self.image_layout = QVBoxLayout()
