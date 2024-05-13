@@ -484,12 +484,12 @@ def creee_image_fond(height, width):
 
     cv2.imwrite("colors.png", image)
 
-def creation_image_complete(mois):
+def creation_image_complete(mois, port):
 
     cree_dossier_images()
 
     # tous les mois sont pas en ligne, souvent y'a pas ceux passés et l'année d'après est pas forcémément déja la
-    url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/le-verdon-sur-mer-1036/" 
+    url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/" + port + "/" 
 
 
     image_vide("1.png")
@@ -535,4 +535,5 @@ def creation_image_complete(mois):
 
 if __name__ == "__main__":
     mois = ["juin", "juillet", "aout", "septembre"]
-    creation_image_complete(mois)
+    port = "saint-jean-de-luz-61"
+    creation_image_complete(mois, port)
