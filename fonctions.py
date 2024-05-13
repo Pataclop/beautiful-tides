@@ -16,17 +16,16 @@ import shutil
 NB_MAREE = 124
 fancy_font = "AmaticSC-Bold.ttf"
 regular_font = "Arial"
-
+minutes_dans_journée = 1440
 semaine = ["lu", "ma", "me", "je", "ve", "sa", "di"]
 dossier_images = "IMAGES"
+#TODO essayer de rendre la taille de tout dynamique / modifiable de facon harmonieuse via GUI. les espaces entre les machins et les tailles de police surtout.
+# éventuellement les polices aussi. Et les seuils de marée rouge vert. 
 
 def cree_dossier_images():
     if os.path.exists(dossier_images):
         shutil.rmtree(dossier_images)
-
     os.mkdir(dossier_images)
-
-
 
 def aligne_basse(chaine):
     # Créer un modèle de regex pour trouver "Maree basse" suivie de la prochaine lettre "M" ou "L"
@@ -54,13 +53,10 @@ def clean (soup) :
     new_soup.append(new_html)
     new_body = new_soup.new_tag('body')
     new_html.append(new_body)
-
     # Ajouter les balises <span> trouvées dans le nouvel arbre HTML
     all_spans = soup.find_all('span')
-
     # Obtenir les contenus des balises <span> dans une liste
     span_contents = [span.get_text() for span in all_spans]
-
     # Joindre les contenus par des virgules pour créer la chaîne finale
     cleaned_text = ', '.join(span_contents)
     return cleaned_text
@@ -69,13 +65,11 @@ def remove_lines_until_marker(text, marker):
     lines = text.split("\n")
     output_lines = []
     found_marker = False
-
     for line in lines:
         if found_marker:
             output_lines.append(line)
         if marker in line:
             found_marker = True
-
     result = "\n".join(output_lines)
     return result
 
@@ -83,7 +77,6 @@ def remove_lines_after_marker(text, marker):
     lines = text.split("\n")
     output_lines = []
     found_marker = False
-
     for line in lines:
         if marker in line:
             found_marker = True
@@ -113,20 +106,15 @@ def calculer_angle_entre_points(point1, point2):
     # Extraire les coordonnées x et y de chaque point
     x1, y1 = point1
     x2, y2 = point2
-
     # Calculer la différence entre les coordonnées x et y
     diff_x = x2 - x1
     diff_y = y2 - y1
-
     # Calculer l'angle en radians en utilisant atan2
     angle_radians = math.atan2(diff_y, diff_x)
-
     # Convertir l'angle de radians à degrés
     angle_degrees = math.degrees(angle_radians)
-
     # Assurer que l'angle est positif (entre 0 et 360 degrés)
     angle_degrees = (angle_degrees + 180) % 360 - 180
-    
     return angle_degrees
 
 def plot_line_with_dashes(x_points, y_points):
@@ -139,7 +127,7 @@ def convert_to_minutes(heure_string):
 
 def convert_to_jours(jour_string):
     jour, nb = jour_string.split(' ')
-    return int(nb)*1440
+    return int(nb)*minutes_dans_journée
 
 def get_image_creation_time(image_path):
     return os.path.getctime(image_path)
@@ -198,8 +186,7 @@ def recuperation_et_nettoyage_page_web(url):
     t = t.replace("dimanche", "di")
     return t
 
-def write_text_on_image(image_path, text, angle, position, font_name, font_size):
-    fill=(255,255,255,255)
+def write_text_on_image(image_path, text, angle, position, font_name, font_size, text_color = (255,255,255,255)):
     background_color=(0,0,0,0)
     im = Image.open(image_path)
     font = ImageFont.truetype(font_name, font_size)
@@ -208,13 +195,10 @@ def write_text_on_image(image_path, text, angle, position, font_name, font_size)
     txt = Image.new("RGBA", (im.height,im.height), background_color)
     d = ImageDraw.Draw(txt)
     d.text((200, 0), text, font=font, fill=fill)
-    
+
     # Rotation de l'image contenant le texte
     w = txt.rotate(angle, expand=1)
-    
-    # Conversion de l'image en mode "RGBA"
     w = w.convert("RGBA")
-    
     # Superposition de l'image contenant le texte sur l'image originale
     im.paste(w, position, w)
     im.save(image_path)
@@ -288,12 +272,14 @@ def draw(link, nom):
     current_day = "t"
     previous_day = "r"
     angle = 0
-    minutes_dans_journée = 1440
     hauteur_précédente =  0.0
     hauteur_précédente_2 = 0.0
+    #TODO il y a un bug occasionnel, je ne sais pas pourquoi, mais pour les pointillets en trait, pour le dernier jour (peut etre pour le premier aussi), 
+    #pour le dernier segment complet, le début du segment ne va âs etre raccord avec celui du jour précédent. il y a une marche. il doit y avoir un bug de hauteur précédente ou hauteur précedente 2
     décalage_hauteur_petits_traits = 1.45
     for x, y, h in zip(minutes, hauteurs, heures):
-        #ici, un cas pour quand on est en marée haute, un cas pour quand on est en marée basse. un pic sur 2 on écrit en dessus ou en dessous. 
+        #un cas pour quand on est en marée haute, un cas pour quand on est en marée basse. un pic sur 2 on écrit en dessus ou en dessous. 
+        #TODO, essayer de tout mettre dans un seul truc, moins de dupplication (attention, il y a des différences de valeurs, à passer en parametre donc.)
         if y > moyenne_hauteur :
             if line_index <= 1 :
                 hauteur_précédente = hauteurs[line_index+4]+décalage_hauteur_petits_traits
@@ -371,19 +357,14 @@ def draw(link, nom):
     fig.set_size_inches(largeur_pouces, hauteur_pouces)
     plt.savefig(nom, transparent=True, dpi=220, bbox_inches='tight', format='png')
 
+    #ici on élargit l'image (on rajoute une zone a gauche) pour avoir la place plus tard d'écrire le mois
     image = cv2.imread(nom, cv2.IMREAD_UNCHANGED)
-    
-    # Extraire la largeur et la hauteur de l'image d'entrée
     height, width, _ = image.shape
-        
-    # Créer une image vide avec la largeur de sortie
     padded_image = np.zeros((height, (height+width), 4), dtype=np.uint8)
-    
     # Copier l'image d'entrée à droite avec un espace vide à gauche
     padded_image[:, height:] = image
-    
-    # Enregistrer l'image résultante
     cv2.imwrite(nom, padded_image)
+    #et on écrit le mois
     write_text_on_image(nom, nom[7:-9], 30, (242, 60), fancy_font, 275)
 
 def combine_images (image1, image2):
