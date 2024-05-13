@@ -9,7 +9,9 @@ from bs4 import BeautifulSoup
 from unidecode import unidecode
 import re
 import math
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+import random
+
+from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageFilter
 import os
 import shutil
 
@@ -194,7 +196,7 @@ def write_text_on_image(image_path, text, angle, position, font_name, font_size,
     # Création d'une nouvelle image pour écrire le texte
     txt = Image.new("RGBA", (im.height,im.height), background_color)
     d = ImageDraw.Draw(txt)
-    d.text((200, 0), text, font=font, fill=fill)
+    d.text((200, 0), text, font=font, fill=None)
 
     # Rotation de l'image contenant le texte
     w = txt.rotate(angle, expand=1)
@@ -417,53 +419,70 @@ def stack_images(image1_path, image2_path, output_path):
     # Enregistrer le résultat dans un nouveau fichier
     stacked_image.save(output_path)
 
-def creee_image_fond(height, width):
+def creee_image_fond(height, width, type=1):
     """Crée une image de fond avec une gradient de couleurs pastel
 
     Args:
         height (int): Hauteur de l'image de fond
         width (int): Largeur de l'image de fond
+        type (int): Type de fond (1 = zigzag vague, 2 = bleu flou bulles)
 
     Returns:
-        image (numpy.ndarray): Image de fond avec une gradient de couleurs pastel
+        image (numpy.ndarray): Image de fond 
     """
+    if type == 1:
     # Couleur de fond en type RGB
-    background_color = (255, 255, 255)
-    # Couleurs pastel en type RGB
-    pastel_colors = [(100, 200, 200), (150, 200, 200), (120, 180, 180), (95, 200, 200), (170, 210, 210)]
-    # Inverser l'ordre des composantes des couleurs pastel pour les convertir en type BGR
-    for i in range(len(pastel_colors)):
-        pastel_colors[i] = (pastel_colors[i][2], pastel_colors[i][1], pastel_colors[i][0])
-    # Convertir les couleurs pastel en valeurs flottantes dans l'intervalle [0, 1]
-    colors = [tuple(np.array(c) / 255.0) for c in pastel_colors]
+        background_color = (255, 255, 255)
+        # Couleurs pastel en type RGB
+        pastel_colors = [(100, 200, 200), (150, 200, 200), (120, 180, 180), (95, 200, 200), (170, 210, 210)]
+        # Inverser l'ordre des composantes des couleurs pastel pour les convertir en type BGR
+        for i in range(len(pastel_colors)):
+            pastel_colors[i] = (pastel_colors[i][2], pastel_colors[i][1], pastel_colors[i][0])
+        # Convertir les couleurs pastel en valeurs flottantes dans l'intervalle [0, 1]
+        colors = [tuple(np.array(c) / 255.0) for c in pastel_colors]
 
-    # Créer une image de fond blanche
-    image = np.ones((height, width, 3), dtype=np.float32) * background_color
+        # Créer une image de fond blanche
+        image = np.ones((height, width, 3), dtype=np.float32) * background_color
 
-    nb_zigzags_per_line = height // 500
-    zigzag_width = width // 9
-    zigzag_height = height // nb_zigzags_per_line
-    zigzag_thickness = height // (nb_zigzags_per_line)
+        nb_zigzags_per_line = height // 500
+        zigzag_width = width // 9
+        zigzag_height = height // nb_zigzags_per_line
+        zigzag_thickness = height // (nb_zigzags_per_line)
 
-    for i in range(nb_zigzags_per_line):
-        # Coordonnées du premier point du zigzag
-        y = i * zigzag_height
-        color = colors[i % len(colors)]
+        for i in range(nb_zigzags_per_line):
+            # Coordonnées du premier point du zigzag
+            y = i * zigzag_height
+            color = colors[i % len(colors)]
 
-        for x in range(0, width, zigzag_width):
-            # Si le zigzag est impair
-            if x % (2 * zigzag_width) == 0:
-                # Dessiner un zigzag dans le sens horaire
-                cv2.line(image, (x, y), (x + zigzag_width, y + zigzag_height), color, zigzag_thickness)
-            # Si le zigzag est pair
-            else:
-                # Dessiner un zigzag dans le sens anti-horaire
-                cv2.line(image, (x, y + zigzag_height), (x + zigzag_width, y), color, zigzag_thickness)
+            for x in range(0, width, zigzag_width):
+                # Si le zigzag est impair
+                if x % (2 * zigzag_width) == 0:
+                    # Dessiner un zigzag dans le sens horaire
+                    cv2.line(image, (x, y), (x + zigzag_width, y + zigzag_height), color, zigzag_thickness)
+                # Si le zigzag est pair
+                else:
+                    # Dessiner un zigzag dans le sens anti-horaire
+                    cv2.line(image, (x, y + zigzag_height), (x + zigzag_width, y), color, zigzag_thickness)
 
-    # Convertir l'image en type np.uint8
-    image = (image * 255).astype(np.uint8)
+        # Convertir l'image en type np.uint8
+        image = (image * 255).astype(np.uint8)
 
-    cv2.imwrite("colors.png", image)
+        cv2.imwrite("colors.png", image)
+
+    elif type == 2:
+        image = Image.new("RGB", (width, height), "white")
+        draw = ImageDraw.Draw(image)
+
+        # Remplir l'image de cercles aléatoires
+        for _ in range(1000):
+            rayon = random.randint(width//20, width//10)
+            x = random.randint(0, width)
+            y = random.randint(0, height)
+            couleur_bleu = random.randint(200, 255)  # Choix aléatoire de la composante bleue
+            couleur = (120, 120, couleur_bleu)
+            draw.ellipse([x - rayon, y - rayon, x + rayon, y + rayon], fill=couleur)
+        image_blurred = image.filter(ImageFilter.GaussianBlur(radius=width//80))
+        image_blurred.save("colors.png")
 
 def creation_image_complete(mois, port):
 
@@ -487,7 +506,7 @@ def creation_image_complete(mois, port):
     img = cv2.imread("out.png")
     hauteur, largeur, c = img.shape
 
-    creee_image_fond(hauteur, largeur)
+    creee_image_fond(hauteur, largeur, 2)
 
     # Charger les images RGBA et RGB
     image_rgba = cv2.imread('out.png', cv2.IMREAD_UNCHANGED)  # Assurez-vous que l'image RGBA est lue correctement (avec les 4 canaux)
@@ -512,7 +531,7 @@ def creation_image_complete(mois, port):
     cv2.imwrite('image_fusionnee.png', merged_image)
     print("FINITO")
 
-
+#TODO créer une image en tete avec l'année et le nom du port et peut etre d'autres choses je sais pas quoi
 
 if __name__ == "__main__":
     mois = ["juin", "juillet", "aout", "septembre"]
