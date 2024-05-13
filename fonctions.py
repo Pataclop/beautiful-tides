@@ -9,24 +9,25 @@ from bs4 import BeautifulSoup
 from unidecode import unidecode
 import re
 import math
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+import random
+
+from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageFilter
 import os
 import shutil
 
 NB_MAREE = 124
 fancy_font = "AmaticSC-Bold.ttf"
 regular_font = "Arial"
-
+minutes_dans_journée = 1440
 semaine = ["lu", "ma", "me", "je", "ve", "sa", "di"]
 dossier_images = "IMAGES"
+#TODO essayer de rendre la taille de tout dynamique / modifiable de facon harmonieuse via GUI. les espaces entre les machins et les tailles de police surtout.
+# éventuellement les polices aussi. Et les seuils de marée rouge vert. 
 
 def cree_dossier_images():
     if os.path.exists(dossier_images):
         shutil.rmtree(dossier_images)
-
     os.mkdir(dossier_images)
-
-
 
 def aligne_basse(chaine):
     # Créer un modèle de regex pour trouver "Maree basse" suivie de la prochaine lettre "M" ou "L"
@@ -54,13 +55,10 @@ def clean (soup) :
     new_soup.append(new_html)
     new_body = new_soup.new_tag('body')
     new_html.append(new_body)
-
     # Ajouter les balises <span> trouvées dans le nouvel arbre HTML
     all_spans = soup.find_all('span')
-
     # Obtenir les contenus des balises <span> dans une liste
     span_contents = [span.get_text() for span in all_spans]
-
     # Joindre les contenus par des virgules pour créer la chaîne finale
     cleaned_text = ', '.join(span_contents)
     return cleaned_text
@@ -69,13 +67,11 @@ def remove_lines_until_marker(text, marker):
     lines = text.split("\n")
     output_lines = []
     found_marker = False
-
     for line in lines:
         if found_marker:
             output_lines.append(line)
         if marker in line:
             found_marker = True
-
     result = "\n".join(output_lines)
     return result
 
@@ -83,7 +79,6 @@ def remove_lines_after_marker(text, marker):
     lines = text.split("\n")
     output_lines = []
     found_marker = False
-
     for line in lines:
         if marker in line:
             found_marker = True
@@ -113,20 +108,15 @@ def calculer_angle_entre_points(point1, point2):
     # Extraire les coordonnées x et y de chaque point
     x1, y1 = point1
     x2, y2 = point2
-
     # Calculer la différence entre les coordonnées x et y
     diff_x = x2 - x1
     diff_y = y2 - y1
-
     # Calculer l'angle en radians en utilisant atan2
     angle_radians = math.atan2(diff_y, diff_x)
-
     # Convertir l'angle de radians à degrés
     angle_degrees = math.degrees(angle_radians)
-
     # Assurer que l'angle est positif (entre 0 et 360 degrés)
     angle_degrees = (angle_degrees + 180) % 360 - 180
-    
     return angle_degrees
 
 def plot_line_with_dashes(x_points, y_points):
@@ -139,7 +129,7 @@ def convert_to_minutes(heure_string):
 
 def convert_to_jours(jour_string):
     jour, nb = jour_string.split(' ')
-    return int(nb)*1440
+    return int(nb)*minutes_dans_journée
 
 def get_image_creation_time(image_path):
     return os.path.getctime(image_path)
@@ -198,8 +188,7 @@ def recuperation_et_nettoyage_page_web(url):
     t = t.replace("dimanche", "di")
     return t
 
-def write_text_on_image(image_path, text, angle, position, font_name, font_size):
-    fill=(255,255,255,255)
+def write_text_on_image(image_path, text, angle, position, font_name, font_size, text_color = (255,255,255,255)):
     background_color=(0,0,0,0)
     im = Image.open(image_path)
     font = ImageFont.truetype(font_name, font_size)
@@ -207,14 +196,11 @@ def write_text_on_image(image_path, text, angle, position, font_name, font_size)
     # Création d'une nouvelle image pour écrire le texte
     txt = Image.new("RGBA", (im.height,im.height), background_color)
     d = ImageDraw.Draw(txt)
-    d.text((200, 0), text, font=font, fill=fill)
-    
+    d.text((200, 0), text, font=font, fill=None)
+
     # Rotation de l'image contenant le texte
     w = txt.rotate(angle, expand=1)
-    
-    # Conversion de l'image en mode "RGBA"
     w = w.convert("RGBA")
-    
     # Superposition de l'image contenant le texte sur l'image originale
     im.paste(w, position, w)
     im.save(image_path)
@@ -288,12 +274,14 @@ def draw(link, nom):
     current_day = "t"
     previous_day = "r"
     angle = 0
-    minutes_dans_journée = 1440
     hauteur_précédente =  0.0
     hauteur_précédente_2 = 0.0
+    #TODO il y a un bug occasionnel, je ne sais pas pourquoi, mais pour les pointillets en trait, pour le dernier jour (peut etre pour le premier aussi), 
+    #pour le dernier segment complet, le début du segment ne va âs etre raccord avec celui du jour précédent. il y a une marche. il doit y avoir un bug de hauteur précédente ou hauteur précedente 2
     décalage_hauteur_petits_traits = 1.45
     for x, y, h in zip(minutes, hauteurs, heures):
-        #ici, un cas pour quand on est en marée haute, un cas pour quand on est en marée basse. un pic sur 2 on écrit en dessus ou en dessous. 
+        #un cas pour quand on est en marée haute, un cas pour quand on est en marée basse. un pic sur 2 on écrit en dessus ou en dessous. 
+        #TODO, essayer de tout mettre dans un seul truc, moins de dupplication (attention, il y a des différences de valeurs, à passer en parametre donc.)
         if y > moyenne_hauteur :
             if line_index <= 1 :
                 hauteur_précédente = hauteurs[line_index+4]+décalage_hauteur_petits_traits
@@ -371,19 +359,14 @@ def draw(link, nom):
     fig.set_size_inches(largeur_pouces, hauteur_pouces)
     plt.savefig(nom, transparent=True, dpi=220, bbox_inches='tight', format='png')
 
+    #ici on élargit l'image (on rajoute une zone a gauche) pour avoir la place plus tard d'écrire le mois
     image = cv2.imread(nom, cv2.IMREAD_UNCHANGED)
-    
-    # Extraire la largeur et la hauteur de l'image d'entrée
     height, width, _ = image.shape
-        
-    # Créer une image vide avec la largeur de sortie
     padded_image = np.zeros((height, (height+width), 4), dtype=np.uint8)
-    
     # Copier l'image d'entrée à droite avec un espace vide à gauche
     padded_image[:, height:] = image
-    
-    # Enregistrer l'image résultante
     cv2.imwrite(nom, padded_image)
+    #et on écrit le mois
     write_text_on_image(nom, nom[7:-9], 30, (242, 60), fancy_font, 275)
 
 def combine_images (image1, image2):
@@ -436,60 +419,77 @@ def stack_images(image1_path, image2_path, output_path):
     # Enregistrer le résultat dans un nouveau fichier
     stacked_image.save(output_path)
 
-def creee_image_fond(height, width):
+def creee_image_fond(height, width, type=1):
     """Crée une image de fond avec une gradient de couleurs pastel
 
     Args:
         height (int): Hauteur de l'image de fond
         width (int): Largeur de l'image de fond
+        type (int): Type de fond (1 = zigzag vague, 2 = bleu flou bulles)
 
     Returns:
-        image (numpy.ndarray): Image de fond avec une gradient de couleurs pastel
+        image (numpy.ndarray): Image de fond 
     """
+    if type == 1:
     # Couleur de fond en type RGB
-    background_color = (255, 255, 255)
-    # Couleurs pastel en type RGB
-    pastel_colors = [(100, 200, 200), (150, 200, 200), (120, 180, 180), (95, 200, 200), (170, 210, 210)]
-    # Inverser l'ordre des composantes des couleurs pastel pour les convertir en type BGR
-    for i in range(len(pastel_colors)):
-        pastel_colors[i] = (pastel_colors[i][2], pastel_colors[i][1], pastel_colors[i][0])
-    # Convertir les couleurs pastel en valeurs flottantes dans l'intervalle [0, 1]
-    colors = [tuple(np.array(c) / 255.0) for c in pastel_colors]
+        background_color = (255, 255, 255)
+        # Couleurs pastel en type RGB
+        pastel_colors = [(100, 200, 200), (150, 200, 200), (120, 180, 180), (95, 200, 200), (170, 210, 210)]
+        # Inverser l'ordre des composantes des couleurs pastel pour les convertir en type BGR
+        for i in range(len(pastel_colors)):
+            pastel_colors[i] = (pastel_colors[i][2], pastel_colors[i][1], pastel_colors[i][0])
+        # Convertir les couleurs pastel en valeurs flottantes dans l'intervalle [0, 1]
+        colors = [tuple(np.array(c) / 255.0) for c in pastel_colors]
 
-    # Créer une image de fond blanche
-    image = np.ones((height, width, 3), dtype=np.float32) * background_color
+        # Créer une image de fond blanche
+        image = np.ones((height, width, 3), dtype=np.float32) * background_color
 
-    nb_zigzags_per_line = height // 500
-    zigzag_width = width // 9
-    zigzag_height = height // nb_zigzags_per_line
-    zigzag_thickness = height // (nb_zigzags_per_line)
+        nb_zigzags_per_line = height // 500
+        zigzag_width = width // 9
+        zigzag_height = height // nb_zigzags_per_line
+        zigzag_thickness = height // (nb_zigzags_per_line)
 
-    for i in range(nb_zigzags_per_line):
-        # Coordonnées du premier point du zigzag
-        y = i * zigzag_height
-        color = colors[i % len(colors)]
+        for i in range(nb_zigzags_per_line):
+            # Coordonnées du premier point du zigzag
+            y = i * zigzag_height
+            color = colors[i % len(colors)]
 
-        for x in range(0, width, zigzag_width):
-            # Si le zigzag est impair
-            if x % (2 * zigzag_width) == 0:
-                # Dessiner un zigzag dans le sens horaire
-                cv2.line(image, (x, y), (x + zigzag_width, y + zigzag_height), color, zigzag_thickness)
-            # Si le zigzag est pair
-            else:
-                # Dessiner un zigzag dans le sens anti-horaire
-                cv2.line(image, (x, y + zigzag_height), (x + zigzag_width, y), color, zigzag_thickness)
+            for x in range(0, width, zigzag_width):
+                # Si le zigzag est impair
+                if x % (2 * zigzag_width) == 0:
+                    # Dessiner un zigzag dans le sens horaire
+                    cv2.line(image, (x, y), (x + zigzag_width, y + zigzag_height), color, zigzag_thickness)
+                # Si le zigzag est pair
+                else:
+                    # Dessiner un zigzag dans le sens anti-horaire
+                    cv2.line(image, (x, y + zigzag_height), (x + zigzag_width, y), color, zigzag_thickness)
 
-    # Convertir l'image en type np.uint8
-    image = (image * 255).astype(np.uint8)
+        # Convertir l'image en type np.uint8
+        image = (image * 255).astype(np.uint8)
 
-    cv2.imwrite("colors.png", image)
+        cv2.imwrite("colors.png", image)
 
-def creation_image_complete(mois):
+    elif type == 2:
+        image = Image.new("RGB", (width, height), "white")
+        draw = ImageDraw.Draw(image)
+
+        # Remplir l'image de cercles aléatoires
+        for _ in range(1000):
+            rayon = random.randint(width//20, width//10)
+            x = random.randint(0, width)
+            y = random.randint(0, height)
+            couleur_bleu = random.randint(200, 255)  # Choix aléatoire de la composante bleue
+            couleur = (120, 120, couleur_bleu)
+            draw.ellipse([x - rayon, y - rayon, x + rayon, y + rayon], fill=couleur)
+        image_blurred = image.filter(ImageFilter.GaussianBlur(radius=width//80))
+        image_blurred.save("colors.png")
+
+def creation_image_complete(mois, port):
 
     cree_dossier_images()
 
     # tous les mois sont pas en ligne, souvent y'a pas ceux passés et l'année d'après est pas forcémément déja la
-    url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/le-verdon-sur-mer-1036/" 
+    url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/" + port + "/" 
 
 
     image_vide("1.png")
@@ -506,7 +506,7 @@ def creation_image_complete(mois):
     img = cv2.imread("out.png")
     hauteur, largeur, c = img.shape
 
-    creee_image_fond(hauteur, largeur)
+    creee_image_fond(hauteur, largeur, 2)
 
     # Charger les images RGBA et RGB
     image_rgba = cv2.imread('out.png', cv2.IMREAD_UNCHANGED)  # Assurez-vous que l'image RGBA est lue correctement (avec les 4 canaux)
@@ -531,8 +531,9 @@ def creation_image_complete(mois):
     cv2.imwrite('image_fusionnee.png', merged_image)
     print("FINITO")
 
-
+#TODO créer une image en tete avec l'année et le nom du port et peut etre d'autres choses je sais pas quoi
 
 if __name__ == "__main__":
     mois = ["juin", "juillet", "aout", "septembre"]
-    creation_image_complete(mois)
+    port = "saint-jean-de-luz-61"
+    creation_image_complete(mois, port)
