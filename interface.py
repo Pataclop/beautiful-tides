@@ -28,6 +28,10 @@ class MainWindow(QMainWindow):
         self.month_list.addItems(["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"])
         self.month_list.setSelectionMode(QAbstractItemView.MultiSelection)
 
+        self.port_list = QListWidget()
+        self.port_list.setFixedWidth(150)
+        self.port_list.addItems(["brest-4", "dunkerque-7", "paimpol-957", "loctudy-987", "lorient-57", "pornic-1020", "ile-d-yeu-port-joinville-1023", "la-rochelle-ville-1027", "ile-de-re-saint-martin-1026", "saint-denis-d-oleron-1067", "le-verdon-sur-mer-1036", "cap-ferret-1045", "vieux-boucau-1052", "horaires-des-marees/saint-jean-de-luz-61"])
+
         self.scroll_area = QScrollArea()
         self.scroll_area.setFixedWidth(1500)
         self.scroll_area.setFixedHeight(600)
@@ -54,8 +58,10 @@ class MainWindow(QMainWindow):
         self.layout.addLayout(self.image_layout)
     
     def print_selected_months(self):
+        #TODO il faut aussi envoyer l'année.
         selected_months = [self.month_list.item(i).text() for i in range(self.month_list.count()) if self.month_list.item(i).isSelected()]
-        fonctions.creation_image_complete(selected_months)
+        selected_port = self.port_list.currentItem()
+        fonctions.creation_image_complete(selected_months, selected_port)
 
     def on_month_selection_changed(self):
         selected_months = [self.month_list.item(i).text() for i in range(self.month_list.count()) if self.month_list.item(i).isSelected()]
