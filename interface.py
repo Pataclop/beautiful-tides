@@ -9,7 +9,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Sélecteur de mois")
+        self.setWindowTitle("Choix Parametres")
         self.setGeometry(50, 50, 1700, 800)
 
         self.central_widget = QWidget()
