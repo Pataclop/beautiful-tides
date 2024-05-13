@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
         self.port_list.addItems(["brest-4", "dunkerque-7", "paimpol-957", "loctudy-987", "lorient-57", "pornic-1020", "ile-d-yeu-port-joinville-1023", "la-rochelle-ville-1027", "ile-de-re-saint-martin-1026", "saint-denis-d-oleron-1067", "le-verdon-sur-mer-1036", "cap-ferret-1045", "vieux-boucau-1052", "horaires-des-marees/saint-jean-de-luz-61"])
 
         self.scroll_area = QScrollArea()
-        self.scroll_area.setFixedWidth(1500)
+        self.scroll_area.setFixedWidth(1200)
         self.scroll_area.setFixedHeight(600)
         self.scroll_area.setWidgetResizable(True)
 
@@ -49,6 +49,7 @@ class MainWindow(QMainWindow):
 
         self.layout.addWidget(self.year_selector)
         self.layout.addWidget(self.month_list)
+        self.layout.addWidget(self.port_list)
         
         self.image_layout = QVBoxLayout()
         self.image_layout.addWidget(self.scroll_area)
