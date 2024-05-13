@@ -29,10 +29,10 @@ class MainWindow(QMainWindow):
         self.month_list.addItems(["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"])
         self.month_list.setSelectionMode(QAbstractItemView.MultiSelection)
 
-        self.port_list = QListWidget()
-        self.port_list.setFixedWidth(150)
+        self.port_selector = QListWidget()
+        self.port_selector.setFixedWidth(150)
         #il faudrait un truc pour afficher le nom joli mais renvoyer le nom moche complet
-        self.port_list.addItems(["brest-4", "dunkerque-7", "paimpol-957", "loctudy-987", "lorient-57", "pornic-1020", "ile-d-yeu-port-joinville-1023", "la-rochelle-ville-1027", "ile-de-re-saint-martin-1026", "saint-denis-d-oleron-1067", "le-verdon-sur-mer-1036", "cap-ferret-1045", "vieux-boucau-1052", "saint-jean-de-luz-61"])
+        self.port_selector.addItems(["brest-4", "dunkerque-7", "paimpol-957", "loctudy-987", "lorient-57", "pornic-1020", "ile-d-yeu-port-joinville-1023", "la-rochelle-ville-1027", "ile-de-re-saint-martin-1026", "saint-denis-d-oleron-1067", "le-verdon-sur-mer-1036", "cap-ferret-1045", "vieux-boucau-1052", "saint-jean-de-luz-61"])
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setFixedWidth(1300)
@@ -42,16 +42,17 @@ class MainWindow(QMainWindow):
         self.image_label = QLabel()
         self.scroll_area.setWidget(self.image_label)
 
-        self.refresh_button = QPushButton("pas utile pour l'instant")
-        self.refresh_button.clicked.connect(self.refresh_image)
+        self.preview_button = QPushButton("preview")
+        self.preview_button.clicked.connect(self.preview)
+
 
 
         self.print_button = QPushButton("Créer avec les mois sélectionnés")
         self.print_button.clicked.connect(self.print_selected_months)
 
+        self.layout.addWidget(self.port_selector)
         self.layout.addWidget(self.year_selector)
         self.layout.addWidget(self.month_list)
-        self.layout.addWidget(self.port_list)
         
 
 #TODO faut un affichage d'un mois dans l'interface. Et des parametres pour personaliser un peu l'affichage. des optiopns (lune, saint, jsp), la police et la taile des éléments. 
@@ -59,16 +60,26 @@ class MainWindow(QMainWindow):
 
         self.image_layout = QVBoxLayout()
         self.image_layout.addWidget(self.scroll_area)
-        self.image_layout.addWidget(self.refresh_button)
+        self.image_layout.addWidget(self.preview_button)
         self.image_layout.addWidget(self.print_button)
 
         self.layout.addLayout(self.image_layout)
     
+#TODO y'a des bugs ca se superpose je sais pas pouruqoi c'est bizarre, du a l'interface ? jsp. il est tard.
+    def preview(self):
+        selected_months = [[self.month_list.item(i).text() for i in range(self.month_list.count()) if self.month_list.item(i).isSelected()][0]]
+        selected_port = self.port_selector.currentItem().text()
+
+        print(f"Mois sélectionnés : {selected_months}")
+        print(f"Port : {selected_port}")
+        fonctions.creation_image_complete(selected_months, selected_port, 60, 1)
+        self.refresh_image()
+
     def print_selected_months(self):
         #TODO il faut aussi envoyer l'année.
         selected_months = [self.month_list.item(i).text() for i in range(self.month_list.count()) if self.month_list.item(i).isSelected()]
-        selected_port = self.port_list.currentItem()
-        fonctions.creation_image_complete(selected_months, selected_port)
+        selected_port = self.port_selector.currentItem().text()
+        fonctions.creation_image_complete(selected_months, selected_port, 200, 1)
 
     def on_month_selection_changed(self):
         #change mouse cursor to waiting cursor and change the color of the cursor
@@ -81,8 +92,8 @@ class MainWindow(QMainWindow):
             item = self.month_list.item(i)
             item_name = self.month_list.item(i).text()
             year = self.year_selector.currentItem().text()
-            url = f"https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/le-verdon-sur-mer-1036/{item_name}-{year}"
-            print (url)
+            port = self.port_selector.currentItem().text()
+            url = f"https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/{port}/{item_name}-{year}"
             print (url)
             try:
                 response = requests.head(url)
@@ -101,7 +112,7 @@ class MainWindow(QMainWindow):
 
     def refresh_image(self):
         # Charger une image (remplacez le chemin par votre propre chemin d'image)
-        image_path = "juin-2024.png"
+        image_path = "image_fusionnee.png"
         pixmap = QPixmap(image_path)
         self.image_label.setPixmap(pixmap)
         self.scroll_area.ensureWidgetVisible(self.image_label)

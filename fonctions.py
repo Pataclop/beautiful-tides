@@ -24,7 +24,7 @@ dossier_images = "IMAGES"
 size_factor = 500
 
 
-#TODO essayer de rendre la taille de tout dynamique / modifiable de facon harmonieuse via GUI. les espaces entre les machins et les tailles de police surtout.
+#TODO essayer de rendre la taille de tout modifiable de facon harmonieuse via GUI. les espaces entre les machins et les tailles de police surtout.
 # éventuellement les polices aussi. Et les seuils de marée rouge vert. 
 
 # raise error if sizefactor is less than 12
@@ -375,7 +375,7 @@ def draw(link, nom):
     padded_image[:, int(0.75*height):] = image
     cv2.imwrite(nom, padded_image)
     #et on écrit le mois
-    write_text_on_image(nom, nom[7:-9], 30, (size_factor, size_factor//3), fancy_font, int(size_factor*2))
+    write_text_on_image(nom, nom[7:-9], 30, (size_factor, size_factor//3), fancy_font, int(size_factor*1.25))
 
 def combine_images (image1, image2):
     if image1.shape != image2.shape:
@@ -492,9 +492,12 @@ def creee_image_fond(height, width, type=1):
         image_blurred = image.filter(ImageFilter.GaussianBlur(radius=width//80))
         image_blurred.save("colors.png")
 
-def creation_image_complete(mois, port, fond):
+def creation_image_complete(mois, port, taille, fond):
 
     cree_dossier_images()
+
+    global size_factor
+    size_factor = taille
 
     # tous les mois sont pas en ligne, souvent y'a pas ceux passés et l'année d'après est pas forcémément déja la
     url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/" + port + "/" 
@@ -544,4 +547,4 @@ def creation_image_complete(mois, port, fond):
 if __name__ == "__main__":
     mois = ["juin"]
     port = "saint-jean-de-luz-61"
-    creation_image_complete(mois, port, 1)
+    creation_image_complete(mois, port, 250, 1)
