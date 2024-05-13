@@ -17,8 +17,6 @@ class MainWindow(QMainWindow):
 
         self.layout = QHBoxLayout(self.central_widget)
 
-    #TODO il faudrait un truc pour sélectionner le port (voir le nom exact sur le site météo)
-
         self.year_selector = QListWidget()
         self.year_selector.setFixedWidth(50)
         self.year_selector.addItems(["2024", "2025", "2026"]) # Ajoutez d'autres années si nécessaire
@@ -33,10 +31,11 @@ class MainWindow(QMainWindow):
 
         self.port_list = QListWidget()
         self.port_list.setFixedWidth(150)
+        #il faudrait un truc pour afficher le nom joli mais renvoyer le nom moche complet
         self.port_list.addItems(["brest-4", "dunkerque-7", "paimpol-957", "loctudy-987", "lorient-57", "pornic-1020", "ile-d-yeu-port-joinville-1023", "la-rochelle-ville-1027", "ile-de-re-saint-martin-1026", "saint-denis-d-oleron-1067", "le-verdon-sur-mer-1036", "cap-ferret-1045", "vieux-boucau-1052", "saint-jean-de-luz-61"])
 
         self.scroll_area = QScrollArea()
-        self.scroll_area.setFixedWidth(1200)
+        self.scroll_area.setFixedWidth(1300)
         self.scroll_area.setFixedHeight(600)
         self.scroll_area.setWidgetResizable(True)
 
@@ -72,6 +71,9 @@ class MainWindow(QMainWindow):
         fonctions.creation_image_complete(selected_months, selected_port)
 
     def on_month_selection_changed(self):
+        #change mouse cursor to waiting cursor and change the color of the cursor
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+
         selected_months = [self.month_list.item(i).text() for i in range(self.month_list.count()) if self.month_list.item(i).isSelected()]
         print(f"Mois sélectionnés : {selected_months}")
 
@@ -94,6 +96,8 @@ class MainWindow(QMainWindow):
             except:
                 print("error")
                 item.setForeground(QColor("red"))
+
+        QApplication.restoreOverrideCursor()
 
     def refresh_image(self):
         # Charger une image (remplacez le chemin par votre propre chemin d'image)

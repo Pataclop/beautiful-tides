@@ -21,8 +21,16 @@ regular_font = "Arial"
 minutes_dans_journée = 1440
 semaine = ["lu", "ma", "me", "je", "ve", "sa", "di"]
 dossier_images = "IMAGES"
+size_factor = 500
+
+
 #TODO essayer de rendre la taille de tout dynamique / modifiable de facon harmonieuse via GUI. les espaces entre les machins et les tailles de police surtout.
 # éventuellement les polices aussi. Et les seuils de marée rouge vert. 
+
+# raise error if sizefactor is less than 12
+if size_factor < 10:
+    raise ValueError("size factor must be >10")
+
 
 def cree_dossier_images():
     if os.path.exists(dossier_images):
@@ -196,7 +204,7 @@ def write_text_on_image(image_path, text, angle, position, font_name, font_size,
     # Création d'une nouvelle image pour écrire le texte
     txt = Image.new("RGBA", (im.height,im.height), background_color)
     d = ImageDraw.Draw(txt)
-    d.text((200, 0), text, font=font, fill=None)
+    d.text((size_factor, 0), text, font=font, fill=None)
 
     # Rotation de l'image contenant le texte
     w = txt.rotate(angle, expand=1)
@@ -357,17 +365,17 @@ def draw(link, nom):
     hauteur_pouces = 6
     fig = plt.gcf()
     fig.set_size_inches(largeur_pouces, hauteur_pouces)
-    plt.savefig(nom, transparent=True, dpi=220, bbox_inches='tight', format='png')
+    plt.savefig(nom, transparent=True, dpi=size_factor, bbox_inches='tight', format='png')
 
     #ici on élargit l'image (on rajoute une zone a gauche) pour avoir la place plus tard d'écrire le mois
     image = cv2.imread(nom, cv2.IMREAD_UNCHANGED)
     height, width, _ = image.shape
-    padded_image = np.zeros((height, (height+width), 4), dtype=np.uint8)
+    padded_image = np.zeros((height, (width+int(0.75*height)), 4), dtype=np.uint8)
     # Copier l'image d'entrée à droite avec un espace vide à gauche
-    padded_image[:, height:] = image
+    padded_image[:, int(0.75*height):] = image
     cv2.imwrite(nom, padded_image)
     #et on écrit le mois
-    write_text_on_image(nom, nom[7:-9], 30, (242, 60), fancy_font, 275)
+    write_text_on_image(nom, nom[7:-9], 30, (size_factor, size_factor//3), fancy_font, int(size_factor*2))
 
 def combine_images (image1, image2):
     if image1.shape != image2.shape:
@@ -396,7 +404,7 @@ def image_vide(nom):
     Args:
         nom (str): Nom du fichier de sortie.
     """
-    image = np.zeros((300, 10, 4), dtype=np.uint8)
+    image = np.zeros((2*size_factor, size_factor//10, 4), dtype=np.uint8)
     image[:, :, 3] = 0  # Canal alpha à 0 pour une transparence complète
     cv2.imwrite("IMAGES/"+nom, image)
 
@@ -444,7 +452,7 @@ def creee_image_fond(height, width, type=1):
         # Créer une image de fond blanche
         image = np.ones((height, width, 3), dtype=np.float32) * background_color
 
-        nb_zigzags_per_line = height // 500
+        nb_zigzags_per_line = height // (2*size_factor)
         zigzag_width = width // 9
         zigzag_height = height // nb_zigzags_per_line
         zigzag_thickness = height // (nb_zigzags_per_line)
@@ -484,7 +492,7 @@ def creee_image_fond(height, width, type=1):
         image_blurred = image.filter(ImageFilter.GaussianBlur(radius=width//80))
         image_blurred.save("colors.png")
 
-def creation_image_complete(mois, port):
+def creation_image_complete(mois, port, fond):
 
     cree_dossier_images()
 
@@ -506,7 +514,7 @@ def creation_image_complete(mois, port):
     img = cv2.imread("out.png")
     hauteur, largeur, c = img.shape
 
-    creee_image_fond(hauteur, largeur, 2)
+    creee_image_fond(hauteur, largeur, fond)
 
     # Charger les images RGBA et RGB
     image_rgba = cv2.imread('out.png', cv2.IMREAD_UNCHANGED)  # Assurez-vous que l'image RGBA est lue correctement (avec les 4 canaux)
@@ -534,6 +542,6 @@ def creation_image_complete(mois, port):
 #TODO créer une image en tete avec l'année et le nom du port et peut etre d'autres choses je sais pas quoi
 
 if __name__ == "__main__":
-    mois = ["juin", "juillet", "aout", "septembre"]
+    mois = ["juin"]
     port = "saint-jean-de-luz-61"
-    creation_image_complete(mois, port)
+    creation_image_complete(mois, port, 1)
