@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QPushButton, QLabel, QScrollArea, QAbstractItemView
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QPushButton, QLabel, QScrollArea, QAbstractItemView, QComboBox
 from PyQt5.QtGui import QPixmap, QWheelEvent, QColor
 from PyQt5.QtCore import Qt
 from urllib.request import urlopen
@@ -42,8 +42,14 @@ class MainWindow(QMainWindow):
         self.image_label = QLabel()
         self.scroll_area.setWidget(self.image_label)
 
+
+
         self.preview_button = QPushButton("preview")
         self.preview_button.clicked.connect(self.preview)
+
+        self.comboBox = QComboBox(self)
+        self.comboBox.addItem("Fond 1")
+        self.comboBox.addItem("Fond 2")
 
 
 
@@ -53,6 +59,8 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(self.port_selector)
         self.layout.addWidget(self.year_selector)
         self.layout.addWidget(self.month_list)
+
+     
         
 
 #TODO il faut parametres pour personaliser un peu l'affichage. des optiopns (lune, saint, jsp), la police et la taile des éléments. 
@@ -60,6 +68,13 @@ class MainWindow(QMainWindow):
 
         self.image_layout = QVBoxLayout()
         self.image_layout.addWidget(self.scroll_area)
+        self.comboBox.setFixedWidth(100)
+        
+        self.comboBox.setFocusPolicy(Qt.NoFocus)
+        self.comboBox.setEnabled(False)
+        
+        self.image_layout.addWidget(self.comboBox)
+
         self.image_layout.addWidget(self.preview_button)
         self.image_layout.addWidget(self.print_button)
 
