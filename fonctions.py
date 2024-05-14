@@ -287,60 +287,50 @@ def draw(link, nom):
     #TODO il y a un bug occasionnel, je ne sais pas pourquoi, mais pour les pointillets en trait, pour le dernier jour (peut etre pour le premier aussi), 
     #pour le dernier segment complet, le début du segment ne va âs etre raccord avec celui du jour précédent. il y a une marche. il doit y avoir un bug de hauteur précédente ou hauteur précedente 2
     décalage_hauteur_petits_traits = 1.45
-    for x, y, h in zip(minutes, hauteurs, heures):
-        #un cas pour quand on est en marée haute, un cas pour quand on est en marée basse. un pic sur 2 on écrit en dessus ou en dessous. 
-        #TODO, essayer de tout mettre dans un seul truc, moins de dupplication (attention, il y a des différences de valeurs, à passer en parametre donc.)
-        if y > moyenne_hauteur :
-            if line_index <= 1 :
-                hauteur_précédente = hauteurs[line_index+4]+décalage_hauteur_petits_traits
-            ax.text(x, y+0.6, h, ha='center', va='bottom', fontname=regular_font, fontsize=15, color='black', weight='bold')
-            jour = tab[line_index][0]
-            if current_day!= jour :
-                pt1 = (x, hauteurs[line_index])
-                pt2 = (0,0)
-                if line_index+4<len(minutes):
-                    pt2 = (minutes[line_index+4], hauteurs[line_index+4])
-                else :
-                    pt2 = (minutes[line_index], hauteurs[line_index])
-                angle = calculer_angle_entre_points(pt1, pt2)
-                ax.text((0.35+minutes[line_index]//minutes_dans_journée)*minutes_dans_journée, y+2.0, tab[line_index][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
-                x_points = [minutes[line_index]//minutes_dans_journée*minutes_dans_journée, ((minutes[line_index]//minutes_dans_journée)+1)*minutes_dans_journée]
-                if line_index+4<len(hauteurs):
-                    y_points = [hauteurs[line_index]+décalage_hauteur_petits_traits, hauteurs[line_index+4]+décalage_hauteur_petits_traits]
-                    if line_index>1:
-                        y_points = [hauteur_précédente, hauteurs[line_index+4]+décalage_hauteur_petits_traits]
-                        hauteur_précédente = hauteurs[line_index+4]+décalage_hauteur_petits_traits
-                else :
-                    y_points = [hauteurs[line_index]+décalage_hauteur_petits_traits, hauteurs[line_index]+décalage_hauteur_petits_traits]
-                plot_line_with_dashes(x_points, y_points)
-            current_day = jour
-        else :
-            if line_index <= 1 :
-                hauteur_précédente_2 = hauteurs[line_index+4]-décalage_hauteur_petits_traits
-            ax.text(x, y-1.0, h, ha='center', va='bottom', fontname=regular_font, fontsize=15, color='black', weight='bold')
-            jour = tab[line_index][0]
-            if previous_day!= jour :
-                pt1 = (x, hauteurs[line_index])
-                pt2 = (0,0)
-                if line_index+4<len(minutes):
-                    pt2 = (minutes[line_index+4], hauteurs[line_index+4])
-                else :
-                    pt2 = (minutes[line_index], hauteurs[line_index])
-                angle = calculer_angle_entre_points(pt1, pt2)
-                ax.text((0.35+minutes[line_index]//minutes_dans_journée)*minutes_dans_journée, y-1.9, tab[line_index][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
-                x_points = [minutes[line_index]//minutes_dans_journée*minutes_dans_journée, ((minutes[line_index]//minutes_dans_journée)+1)*minutes_dans_journée]
+
+    def operation(a, b, signe):
+        if signe ==1:
+            return a+b
+        return a-b
+
+    def draw_stuff(hauteur_to_update, updown, day):
+        if line_index <= 1:
+            hauteur_to_update = operation(hauteurs[line_index+4], décalage_hauteur_petits_traits, updown)
+        ax.text(x, operation(y, 0.6 if updown == 1 else 1.0, updown), h, ha='center', va='bottom', fontname=regular_font, fontsize=15, color='black', weight='bold')
+        jour = tab[line_index][0]
+        if day != jour:
+            pt1 = (x, hauteurs[line_index])
+            pt2 = (0,0)
+            if line_index+4<len(minutes):
+                pt2 = (minutes[line_index+4], hauteurs[line_index+4])
+            else:
+                pt2 = (minutes[line_index], hauteurs[line_index])
+            angle = calculer_angle_entre_points(pt1, pt2)
+            ax.text((0.35+minutes[line_index]//minutes_dans_journée)*minutes_dans_journée, operation(y, 2.0 if updown == 1 else 1.9, updown), tab[line_index][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
+            x_points = [minutes[line_index]//minutes_dans_journée*minutes_dans_journée, ((minutes[line_index]//minutes_dans_journée)+1)*minutes_dans_journée]
+            if updown<0:
                 if x_points[1] == 0.0:
                     x_points[1] = x_points[0]
-                if line_index+4<len(hauteurs):
-                    y_points = [hauteurs[line_index]-décalage_hauteur_petits_traits, hauteurs[line_index+4]-décalage_hauteur_petits_traits]
-                    if line_index>1:
-                        y_points = [hauteur_précédente_2, hauteurs[line_index+4]-décalage_hauteur_petits_traits]
-                        hauteur_précédente_2 = hauteurs[line_index+4]-décalage_hauteur_petits_traits
-                else :
-                    y_points = [hauteurs[line_index]-décalage_hauteur_petits_traits, hauteurs[line_index]-décalage_hauteur_petits_traits]
-                plot_line_with_dashes(x_points, y_points)
-            previous_day = jour
+            if line_index+4<len(hauteurs):
+                y_points = [operation(hauteurs[line_index],décalage_hauteur_petits_traits, updown), operation(hauteurs[line_index+4], décalage_hauteur_petits_traits, updown)]
+                if line_index>1:
+                    y_points = [hauteur_to_update, operation(hauteurs[line_index+4],décalage_hauteur_petits_traits, updown)]
+                    hauteur_to_update = operation(hauteurs[line_index+4],décalage_hauteur_petits_traits, updown)
+            else:
+                y_points = [operation(hauteurs[line_index],décalage_hauteur_petits_traits, updown), operation(hauteurs[line_index],décalage_hauteur_petits_traits, updown)]
+            plot_line_with_dashes(x_points, y_points)
+        return jour, hauteur_to_update
+
+
+    for x, y, h in zip(minutes, hauteurs, heures):
+
+
+        if y > moyenne_hauteur :
+            current_day, hauteur_précédente = draw_stuff(hauteur_précédente, 1, current_day)
+        else :
+            previous_day, hauteur_précédente_2 = draw_stuff(hauteur_précédente_2, -1, previous_day)
         line_index = line_index+1
+
 
     last_coef = 0
     for i in range(5):
