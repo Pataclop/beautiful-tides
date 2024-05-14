@@ -294,6 +294,17 @@ def draw(link, nom):
         return a-b
 
     def draw_stuff(hauteur_to_update, updown, day):
+        """
+        Draws text and lines on a plot based on the given parameters.
+
+        Args:
+            hauteur_to_update (float): The height value to update.
+            updown (int): 1 = marée haute, -1 = maree basse.
+            day (str): The current day.
+
+        Returns:
+            tuple: A tuple containing the current day and the updated height value.
+        """
         if line_index <= 1:
             hauteur_to_update = operation(hauteurs[line_index+4], décalage_hauteur_petits_traits, updown)
         ax.text(x, operation(y, 0.6 if updown == 1 else 1.0, updown), h, ha='center', va='bottom', fontname=regular_font, fontsize=15, color='black', weight='bold')
@@ -387,9 +398,7 @@ def combine_images (image1, image2):
 
 def image_vide(nom):
     """Crée une image vide en RGBA et l'enregistre sous le nom spécifié. utile pour espacer les images des bords haut et bas de l'image finale lors de l'assemblage
-
-    La taille de l'image est fixée à 300 pixels de large sur 10 pixels de haut,
-    et le canal alpha est initialisé à 0 pour une transparence complète.
+    image pas large, p as besoin. image haute. le canal alpha est initialisé à 0 pour une transparence complète.
 
     Args:
         nom (str): Nom du fichier de sortie.
@@ -476,22 +485,18 @@ def creee_image_fond(height, width, type=1):
             rayon = random.randint(width//20, width//10)
             x = random.randint(0, width)
             y = random.randint(0, height)
-            couleur_bleu = random.randint(200, 255)  # Choix aléatoire de la composante bleue
-            couleur = (120, 120, couleur_bleu)
+            couleur_bleu = random.randint(190, 255)  # Choix aléatoire de la composante bleue
+            couleur = (110, 120, couleur_bleu)
             draw.ellipse([x - rayon, y - rayon, x + rayon, y + rayon], fill=couleur)
         image_blurred = image.filter(ImageFilter.GaussianBlur(radius=width//80))
         image_blurred.save("colors.png")
 
 def creation_image_complete(mois, port, taille, fond):
-
     cree_dossier_images()
-
     global size_factor
     size_factor = taille
 
-    # tous les mois sont pas en ligne, souvent y'a pas ceux passés et l'année d'après est pas forcémément déja la
     url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/" + port + "/" 
-
 
     image_vide("1.png")
     for m in mois :
@@ -530,6 +535,7 @@ def creation_image_complete(mois, port, taille, fond):
 
 
     cv2.imwrite('image_fusionnee.png', merged_image)
+    
     print("FINITO")
 
 #TODO créer une image en tete avec l'année et le nom du port et peut etre d'autres choses je sais pas quoi
