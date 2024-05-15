@@ -51,20 +51,56 @@ class MainWindow(QMainWindow):
         self.comboBox.addItem("Fond 1")
         self.comboBox.addItem("Fond 2")
 
-        self.slider = QSlider(Qt.Horizontal)
-        self.slider.setMinimum(-100)  # pour que chaque incrément corresponde à 0.1
-        self.slider.setMaximum(100)   # pour que chaque incrément corresponde à 0.1
-        self.slider.setValue(0)
-        self.slider.setTickInterval(10)  # Chaque 1.0 sur le slider représentera 10 dixièmes
-        self.slider.setTickPosition(QSlider.TicksBelow)
-        self.slider.setFixedWidth(150)
+        self.slider_hauteur_jour = QSlider(Qt.Horizontal)
+        self.slider_hauteur_jour.setMinimum(-100)  # pour que chaque incrément corresponde à 0.1
+        self.slider_hauteur_jour.setMaximum(100)   # pour que chaque incrément corresponde à 0.1
+        self.slider_hauteur_jour.setValue(0)
+        self.slider_hauteur_jour.setTickInterval(10)  # Chaque 1.0 sur le slider_hauteur_jour représentera 10 dixièmes
+        self.slider_hauteur_jour.setTickPosition(QSlider.TicksBelow)
+        self.slider_hauteur_jour.setFixedWidth(150)
 
 
-        self.label = QLabel('Valeur actuelle : 0.0')
+        self.label_hauteur_jour = QLabel('Hauteur jour : 0.0')
 
-        self.slider.valueChanged.connect(self.updateLabel)
 
-        
+        self.slider_epaisseur_trait_jour = QSlider(Qt.Horizontal)
+        self.slider_epaisseur_trait_jour.setMinimum(-100)  # pour que chaque incrément corresponde à 0.1
+        self.slider_epaisseur_trait_jour.setMaximum(100)   # pour que chaque incrément corresponde à 0.1
+        self.slider_epaisseur_trait_jour.setValue(0)
+        self.slider_epaisseur_trait_jour.setTickInterval(10)  # Chaque 1.0 sur le slider_hauteur_jour représentera 10 dixièmes
+        self.slider_epaisseur_trait_jour.setTickPosition(QSlider.TicksBelow)
+        self.slider_epaisseur_trait_jour.setFixedWidth(150)
+
+
+        self.label_epaisseur_trait_jour = QLabel('Epaisseur trait jour : 0.0')
+
+
+        self.slider_limite_haut_coef = QSlider(Qt.Horizontal)
+        self.slider_limite_haut_coef.setMinimum(70)  # pour que chaque incrément corresponde à 0.1
+        self.slider_limite_haut_coef.setMaximum(120)   # pour que chaque incrément corresponde à 0.1
+        self.slider_limite_haut_coef.setValue(95)
+        self.slider_limite_haut_coef.setTickInterval(1)  # Chaque 1.0 sur le slider_hauteur_jour dépassera 10 dixiemes
+        self.slider_limite_haut_coef.setTickPosition(QSlider.TicksBelow)
+        self.slider_limite_haut_coef.setFixedWidth(150)
+
+
+        self.label_limite_haut_coef = QLabel('Limite haut coef : 0.0')
+
+        self.slider_limite_bas_coef = QSlider(Qt.Horizontal)
+        self.slider_limite_bas_coef.setMinimum(70)  # pour que chaque incrément corresponde à 0.1
+        self.slider_limite_bas_coef.setMaximum(120)   # pour que chaque incrément corresponde à 0.1
+        self.slider_limite_bas_coef.setValue(95)
+        self.slider_limite_bas_coef.setTickInterval(1)  # Chaque 1.0 sur le slider_hauteur_jour dépassera 10 dixiemes
+        self.slider_limite_bas_coef.setTickPosition(QSlider.TicksBelow)
+        self.slider_limite_bas_coef.setFixedWidth(150)
+
+
+        self.label_limite_bas_coef = QLabel('Limite bas coef : 0.0')
+
+        self.slider_hauteur_jour.valueChanged.connect(self.updateLabel_hauteur_jour)
+        self.slider_epaisseur_trait_jour.valueChanged.connect(self.updateLabel_epaisseur_trait_jour)
+        self.slider_limite_haut_coef.valueChanged.connect(self.updateLabel_limite_haut_coef)
+        self.slider_limite_bas_coef.valueChanged.connect(self.updateLabel_limite_bas_coef)
 
 
 
@@ -90,11 +126,23 @@ class MainWindow(QMainWindow):
 
         
         vbox = QVBoxLayout()
-        vbox.addWidget(self.label)
-        vbox.addWidget(self.slider)
+        vbox.addWidget(self.label_hauteur_jour)
+        vbox.addWidget(self.slider_hauteur_jour)
+        vbox2 = QVBoxLayout()
+        vbox2.addWidget(self.label_epaisseur_trait_jour)
+        vbox2.addWidget(self.slider_epaisseur_trait_jour)
+        vbox3 = QVBoxLayout()
+        vbox3.addWidget(self.label_limite_haut_coef)
+        vbox3.addWidget(self.slider_limite_haut_coef)
+        vbox4 = QVBoxLayout()
+        vbox4.addWidget(self.label_limite_bas_coef)
+        vbox4.addWidget(self.slider_limite_bas_coef)
         hbox = QHBoxLayout()
         hbox.addWidget(self.comboBox)
         hbox.addLayout(vbox)
+        hbox.addLayout(vbox2)
+        hbox.addLayout(vbox3)
+
         self.image_layout.addLayout(hbox)
 
         self.setLayout(self.image_layout)
@@ -114,9 +162,22 @@ class MainWindow(QMainWindow):
         fonctions.creation_image_complete(selected_months, selected_port, 60, 1)
         self.refresh_image()
 
-    def updateLabel(self):
-            value = self.slider.value() / 10.0  # Convertit la valeur de l'intervalle [-100, 100] en [-10.0, 10.0]
-            self.label.setText('hauteur jours : {:.1f}'.format(value))
+    def updateLabel_hauteur_jour(self):
+            value = self.slider_hauteur_jour.value() / 10.0  # Convertit la valeur de l'intervalle [-100, 100] en [-10.0, 10.0]
+            self.label_hauteur_jour.setText('hauteur jours : {:.1f}'.format(value))
+    
+    def updateLabel_epaisseur_trait_jour(self):
+            value = self.slider_epaisseur_trait_jour.value() / 10.0  # Convertit la valeur de l'intervalle [-100, 100] en [-10.0, 10.0]
+            self.label_epaisseur_trait_jour.setText('epaisseur trait jours : {:.1f}'.format(value))
+
+    def updateLabel_limite_haut_coef(self):
+            value = self.slider_limite_haut_coef.value()  # Convertit la valeur de l'intervalle [-100, 100] en [-10.0, 10.0]
+            self.label_limite_haut_coef.setText('limite haut coef : {:.1f}'.format(value))
+    
+    def updateLabel_limite_bas_coef(self):
+            value = self.slider_limite_bas_coef.value()  # Convertit la valeur de l'intervalle [-100, 100] en [-10.0, 10.0]
+            self.label_limite_bas_coef.setText('limite bas coef : {:.1f}'.format(value))
+
 
     def print_selected_months(self):
         #TODO il faut aussi envoyer l'année.
