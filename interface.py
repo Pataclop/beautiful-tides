@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QPushButton, QLabel, QScrollArea, QAbstractItemView, QComboBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QPushButton, QLabel, QScrollArea, QAbstractItemView, QComboBox, QSlider
 from PyQt5.QtGui import QPixmap, QWheelEvent, QColor
 from PyQt5.QtCore import Qt
 from urllib.request import urlopen
@@ -51,6 +51,21 @@ class MainWindow(QMainWindow):
         self.comboBox.addItem("Fond 1")
         self.comboBox.addItem("Fond 2")
 
+        self.slider = QSlider(Qt.Horizontal)
+        self.slider.setMinimum(-100)  # pour que chaque incrément corresponde à 0.1
+        self.slider.setMaximum(100)   # pour que chaque incrément corresponde à 0.1
+        self.slider.setValue(0)
+        self.slider.setTickInterval(10)  # Chaque 1.0 sur le slider représentera 10 dixièmes
+        self.slider.setTickPosition(QSlider.TicksBelow)
+        self.slider.setFixedWidth(150)
+
+
+        self.label = QLabel('Valeur actuelle : 0.0')
+
+        self.slider.valueChanged.connect(self.updateLabel)
+
+        
+
 
 
         self.print_button = QPushButton("Créer avec les mois sélectionnés")
@@ -72,8 +87,17 @@ class MainWindow(QMainWindow):
         
         self.comboBox.setFocusPolicy(Qt.NoFocus)
         self.comboBox.setEnabled(False)
+
         
-        self.image_layout.addWidget(self.comboBox)
+        vbox = QVBoxLayout()
+        vbox.addWidget(self.label)
+        vbox.addWidget(self.slider)
+        hbox = QHBoxLayout()
+        hbox.addWidget(self.comboBox)
+        hbox.addLayout(vbox)
+        self.image_layout.addLayout(hbox)
+
+        self.setLayout(self.image_layout)
 
         self.image_layout.addWidget(self.preview_button)
         self.image_layout.addWidget(self.print_button)
@@ -89,6 +113,10 @@ class MainWindow(QMainWindow):
         print(f"Port : {selected_port}")
         fonctions.creation_image_complete(selected_months, selected_port, 60, 1)
         self.refresh_image()
+
+    def updateLabel(self):
+            value = self.slider.value() / 10.0  # Convertit la valeur de l'intervalle [-100, 100] en [-10.0, 10.0]
+            self.label.setText('hauteur jours : {:.1f}'.format(value))
 
     def print_selected_months(self):
         #TODO il faut aussi envoyer l'année.
