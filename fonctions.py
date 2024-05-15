@@ -491,7 +491,7 @@ def creee_image_fond(height, width, type=1):
         image_blurred = image.filter(ImageFilter.GaussianBlur(radius=width//80))
         image_blurred.save("colors.png")
 
-def creation_image_complete(mois, port, taille, fond):
+def creation_image_complete(mois, port, taille, fond, nom_sortie="image_fusionnee.png"):
     cree_dossier_images()
     global size_factor
     size_factor = taille
@@ -534,7 +534,7 @@ def creation_image_complete(mois, port, taille, fond):
     merged_image = cv2.merge([updated_blue, updated_green, updated_red])
 
 
-    cv2.imwrite('image_fusionnee.png', merged_image)
+    cv2.imwrite(nom_sortie, merged_image)
     
     print("FINITO")
 
@@ -543,4 +543,5 @@ def creation_image_complete(mois, port, taille, fond):
 if __name__ == "__main__":
     mois = ["juin"]
     port = "saint-jean-de-luz-61"
-    creation_image_complete(mois, port, 250, 1)
+    creation_image_complete(mois, port, 60, 1)
+
