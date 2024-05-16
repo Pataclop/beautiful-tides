@@ -21,9 +21,12 @@ regular_font = "Arial"
 minutes_dans_journée = 1440
 semaine = ["lu", "ma", "me", "je", "ve", "sa", "di"]
 dossier_images = "IMAGES"
-size_factor = 500
-
-
+size_factor = 300
+marge_pointillets = 50
+hauteur_jour = 2.0
+epaisseur_trait_jour = 1.0
+limite_haut_coef = 95
+limite_bas_coef = 35
 #TODO essayer de rendre la taille de tout modifiable de facon harmonieuse via GUI. les espaces entre les machins et les tailles de police surtout.
 # éventuellement les polices aussi. Et les seuils de marée rouge vert. 
 
@@ -129,7 +132,9 @@ def calculer_angle_entre_points(point1, point2):
 
 def plot_line_with_dashes(x_points, y_points):
     linestyle = '--'
-    plt.plot(x_points, y_points, linestyle=linestyle)
+    x_points[0] = x_points[0]+marge_pointillets
+    x_points[1] = x_points[1]-marge_pointillets
+    plt.plot(x_points, y_points, linestyle=linestyle, color='black', linewidth=epaisseur_trait_jour )
 
 def convert_to_minutes(heure_string):
     heures, minutes = heure_string.split('h')
@@ -269,8 +274,8 @@ def draw(link, nom):
     fig, ax = plt.subplots()
 
     # Tracer les hauteurs sous forme de segments noirs inclinés
-    for i in range(len(hauteurs) - 1):
-        ax.plot([minutes[i], minutes[i+1]], [hauteurs[i], hauteurs[i+1]], color='black', linewidth=6)
+    ax.plot(minutes, hauteurs, color='black', linewidth=6)
+
 
 
     for x, y in zip(minutes, hauteurs):
@@ -317,7 +322,7 @@ def draw(link, nom):
             else:
                 pt2 = (minutes[line_index], hauteurs[line_index])
             angle = calculer_angle_entre_points(pt1, pt2)
-            ax.text((0.35+minutes[line_index]//minutes_dans_journée)*minutes_dans_journée, operation(y, 2.0 if updown == 1 else 1.9, updown), tab[line_index][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
+            ax.text((0.35+minutes[line_index]//minutes_dans_journée)*minutes_dans_journée, operation(y, hauteur_jour if updown == 1 else hauteur_jour-0.1, updown), tab[line_index][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
             x_points = [minutes[line_index]//minutes_dans_journée*minutes_dans_journée, ((minutes[line_index]//minutes_dans_journée)+1)*minutes_dans_journée]
             if updown<0:
                 if x_points[1] == 0.0:
@@ -354,9 +359,9 @@ def draw(link, nom):
         if c is not None and int(c) > 10 :
             last_coef = c
         if y > moyenne_hauteur :
-            if int(last_coef) > 95 :
+            if int(last_coef) > limite_haut_coef :
                 couleur_coefficient('red')
-            elif int(last_coef) < 35 :
+            elif int(last_coef) < limite_bas_coef :
                 couleur_coefficient('forestgreen')
             else :
                 couleur_coefficient('black')
@@ -539,9 +544,9 @@ def creation_image_complete(mois, port, taille, fond, nom_sortie="image_fusionne
     print("FINITO")
 
 #TODO créer une image en tete avec l'année et le nom du port et peut etre d'autres choses je sais pas quoi
-
+#TODO ca serait bien d'avoir la lune aussi. 
 if __name__ == "__main__":
     mois = ["juin"]
     port = "saint-jean-de-luz-61"
-    creation_image_complete(mois, port, 60, 1)
+    creation_image_complete(mois, port, 100, 1)
 
