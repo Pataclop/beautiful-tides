@@ -87,9 +87,9 @@ class MainWindow(QMainWindow):
         self.label_limite_haut_coef = QLabel('Limite haut coef : 0.0')
 
         self.slider_limite_bas_coef = QSlider(Qt.Horizontal)
-        self.slider_limite_bas_coef.setMinimum(70)  # pour que chaque incrément corresponde à 0.1
-        self.slider_limite_bas_coef.setMaximum(120)   # pour que chaque incrément corresponde à 0.1
-        self.slider_limite_bas_coef.setValue(95)
+        self.slider_limite_bas_coef.setMinimum(20)  # pour que chaque incrément corresponde à 0.1
+        self.slider_limite_bas_coef.setMaximum(50)   # pour que chaque incrément corresponde à 0.1
+        self.slider_limite_bas_coef.setValue(35)
         self.slider_limite_bas_coef.setTickInterval(1)  # Chaque 1.0 sur le slider_hauteur_jour dépassera 10 dixiemes
         self.slider_limite_bas_coef.setTickPosition(QSlider.TicksBelow)
         self.slider_limite_bas_coef.setFixedWidth(150)
@@ -142,6 +142,7 @@ class MainWindow(QMainWindow):
         hbox.addLayout(vbox)
         hbox.addLayout(vbox2)
         hbox.addLayout(vbox3)
+        hbox.addLayout(vbox4)
 
         self.image_layout.addLayout(hbox)
 
@@ -159,6 +160,11 @@ class MainWindow(QMainWindow):
 
         print(f"Mois sélectionnés : {selected_months}")
         print(f"Port : {selected_port}")
+        hauteur_jour = self.slider_hauteur_jour.value()
+        epaisseur_trait_jour = self.slider_epaisseur_trait_jour.value()
+        limite_haut_coef = self.slider_limite_haut_coef.value()
+        limite_bas_coef = self.slider_limite_bas_coef.value()
+
         fonctions.creation_image_complete(selected_months, selected_port, 60, 1)
         self.refresh_image()
 
