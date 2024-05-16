@@ -52,10 +52,10 @@ class MainWindow(QMainWindow):
         self.comboBox.addItem("Fond 2")
 
         self.slider_hauteur_jour = QSlider(Qt.Horizontal)
-        self.slider_hauteur_jour.setMinimum(-100)  # pour que chaque incrément corresponde à 0.1
-        self.slider_hauteur_jour.setMaximum(100)   # pour que chaque incrément corresponde à 0.1
-        self.slider_hauteur_jour.setValue(0)
-        self.slider_hauteur_jour.setTickInterval(10)  # Chaque 1.0 sur le slider_hauteur_jour représentera 10 dixièmes
+        self.slider_hauteur_jour.setMinimum(0) 
+        self.slider_hauteur_jour.setMaximum(50)   
+        self.slider_hauteur_jour.setValue(20)
+        self.slider_hauteur_jour.setTickInterval(1)  
         self.slider_hauteur_jour.setTickPosition(QSlider.TicksBelow)
         self.slider_hauteur_jour.setFixedWidth(150)
 
@@ -64,10 +64,10 @@ class MainWindow(QMainWindow):
 
 
         self.slider_epaisseur_trait_jour = QSlider(Qt.Horizontal)
-        self.slider_epaisseur_trait_jour.setMinimum(-100)  # pour que chaque incrément corresponde à 0.1
-        self.slider_epaisseur_trait_jour.setMaximum(100)   # pour que chaque incrément corresponde à 0.1
-        self.slider_epaisseur_trait_jour.setValue(0)
-        self.slider_epaisseur_trait_jour.setTickInterval(10)  # Chaque 1.0 sur le slider_hauteur_jour représentera 10 dixièmes
+        self.slider_epaisseur_trait_jour.setMinimum(0)  
+        self.slider_epaisseur_trait_jour.setMaximum(100)   
+        self.slider_epaisseur_trait_jour.setValue(10)
+        self.slider_epaisseur_trait_jour.setTickInterval(1)  
         self.slider_epaisseur_trait_jour.setTickPosition(QSlider.TicksBelow)
         self.slider_epaisseur_trait_jour.setFixedWidth(150)
 
@@ -76,10 +76,10 @@ class MainWindow(QMainWindow):
 
 
         self.slider_limite_haut_coef = QSlider(Qt.Horizontal)
-        self.slider_limite_haut_coef.setMinimum(70)  # pour que chaque incrément corresponde à 0.1
-        self.slider_limite_haut_coef.setMaximum(120)   # pour que chaque incrément corresponde à 0.1
+        self.slider_limite_haut_coef.setMinimum(70)  
+        self.slider_limite_haut_coef.setMaximum(120)   
         self.slider_limite_haut_coef.setValue(95)
-        self.slider_limite_haut_coef.setTickInterval(1)  # Chaque 1.0 sur le slider_hauteur_jour dépassera 10 dixiemes
+        self.slider_limite_haut_coef.setTickInterval(1)  
         self.slider_limite_haut_coef.setTickPosition(QSlider.TicksBelow)
         self.slider_limite_haut_coef.setFixedWidth(150)
 
@@ -87,10 +87,10 @@ class MainWindow(QMainWindow):
         self.label_limite_haut_coef = QLabel('Limite haut coef : 0.0')
 
         self.slider_limite_bas_coef = QSlider(Qt.Horizontal)
-        self.slider_limite_bas_coef.setMinimum(20)  # pour que chaque incrément corresponde à 0.1
-        self.slider_limite_bas_coef.setMaximum(50)   # pour que chaque incrément corresponde à 0.1
+        self.slider_limite_bas_coef.setMinimum(20)  
+        self.slider_limite_bas_coef.setMaximum(50)   
         self.slider_limite_bas_coef.setValue(35)
-        self.slider_limite_bas_coef.setTickInterval(1)  # Chaque 1.0 sur le slider_hauteur_jour dépassera 10 dixiemes
+        self.slider_limite_bas_coef.setTickInterval(1)  
         self.slider_limite_bas_coef.setTickPosition(QSlider.TicksBelow)
         self.slider_limite_bas_coef.setFixedWidth(150)
 
@@ -160,16 +160,16 @@ class MainWindow(QMainWindow):
 
         print(f"Mois sélectionnés : {selected_months}")
         print(f"Port : {selected_port}")
-        hauteur_jour = self.slider_hauteur_jour.value()
-        epaisseur_trait_jour = self.slider_epaisseur_trait_jour.value()
+        hauteur_jour = self.slider_hauteur_jour.value()/10.0
+        epaisseur_trait_jour = self.slider_epaisseur_trait_jour.value()/10.0
         limite_haut_coef = self.slider_limite_haut_coef.value()
         limite_bas_coef = self.slider_limite_bas_coef.value()
 
-        fonctions.creation_image_complete(selected_months, selected_port, 60, 1)
+        fonctions.creation_via_interface(selected_months, selected_port, 60, 1, hauteur_jour, epaisseur_trait_jour, limite_haut_coef, limite_bas_coef)
         self.refresh_image()
 
     def updateLabel_hauteur_jour(self):
-            value = self.slider_hauteur_jour.value() / 10.0  # Convertit la valeur de l'intervalle [-100, 100] en [-10.0, 10.0]
+            value = self.slider_hauteur_jour.value()/10.0  # Convertit la valeur de l'intervalle [-100, 100] en [-10.0, 10.0]
             self.label_hauteur_jour.setText('hauteur jours : {:.1f}'.format(value))
     
     def updateLabel_epaisseur_trait_jour(self):
@@ -205,6 +205,7 @@ class MainWindow(QMainWindow):
             port = self.port_selector.currentItem().text()
             url = f"https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/{port}/{item_name}-{year}"
             print (url)
+            """
             try:
                 response = requests.head(url)
                 #TODO améliorer la vérification des pages web existantes ou non. là ca marche pas pour les années suivantes puisque la page existe souvent mais n'est pas remplie. il faudrait tester si la page est remplie.
@@ -217,7 +218,7 @@ class MainWindow(QMainWindow):
             except:
                 print("error")
                 item.setForeground(QColor("red"))
-
+            """
         QApplication.restoreOverrideCursor()
 
     def refresh_image(self):
