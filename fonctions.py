@@ -2,31 +2,34 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import requests
-import csv
 from pathlib import Path
-from datetime import datetime
 from bs4 import BeautifulSoup
 from unidecode import unidecode
 import re
 import math
 import random
-
-from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageFilter
+from matplotlib.font_manager import FontProperties
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import os
 import shutil
 
+font_path = 'fonts/FUTURANEXTDEMIBOLDITALIC.TTF'  # Assurez-vous que le chemin est correct
+font_path2 = 'fonts/FUTURANEXTLIGHT.TTF'
+font_hauteur = FontProperties(fname=font_path2)
+jours_font = FontProperties(fname=font_path)
 NB_MAREE = 124
-fancy_font = "AmaticSC-Bold.ttf"
+fancy_font = "fonts/AmaticSC-Bold.ttf"
 regular_font = "Arial"
 minutes_dans_journée = 1440
 semaine = ["lu", "ma", "me", "je", "ve", "sa", "di"]
 dossier_images = "IMAGES"
 size_factor = 300
 marge_pointillets = 50
-hauteur_jour = 2.0
+hauteur_jour = 1.8
 epaisseur_trait_jour = 1.0
 limite_haut_coef = 95
 limite_bas_coef = 35
+
 #TODO essayer de rendre la taille de tout modifiable de facon harmonieuse via GUI. les espaces entre les machins et les tailles de police surtout.
 # éventuellement les polices aussi. Et les seuils de marée rouge vert. 
 
@@ -280,9 +283,9 @@ def draw(link, nom):
 
     for x, y in zip(minutes, hauteurs):
         if y > moyenne_hauteur :
-            ax.text(x, y+0.2, str(y)+"m", ha='center', va='bottom', fontname=regular_font, fontsize=15, color='white', weight='bold')
+            ax.text(x, y+0.2, str(y)+"m", ha='center', va='bottom', fontproperties=font_hauteur, fontsize=15, color='black')
         else :
-            ax.text(x, y-0.2, str(y)+"m", ha='center', va='top', fontname=regular_font, fontsize=15, color='white',weight='bold')
+            ax.text(x, y-0.2, str(y)+"m", ha='center', va='top', fontproperties=font_hauteur, fontsize=15, color='black')
     line_index = 0
     current_day = "t"
     previous_day = "r"
@@ -312,7 +315,7 @@ def draw(link, nom):
         """
         if line_index <= 1:
             hauteur_to_update = operation(hauteurs[line_index+4], décalage_hauteur_petits_traits, updown)
-        ax.text(x, operation(y, 0.6 if updown == 1 else 1.0, updown), h, ha='center', va='bottom', fontname=regular_font, fontsize=15, color='black', weight='bold')
+        ax.text(x, operation(y, 0.6 if updown == 1 else 1.0, updown), h, ha='center', va='bottom', fontproperties=font_hauteur, fontsize=15, color='black', weight='bold')
         jour = tab[line_index][0]
         if day != jour:
             pt1 = (x, hauteurs[line_index])
@@ -322,7 +325,9 @@ def draw(link, nom):
             else:
                 pt2 = (minutes[line_index], hauteurs[line_index])
             angle = calculer_angle_entre_points(pt1, pt2)
-            ax.text((0.35+minutes[line_index]//minutes_dans_journée)*minutes_dans_journée, operation(y, hauteur_jour if updown == 1 else hauteur_jour-0.1, updown), tab[line_index][0], rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
+            jour_to_write, date_to_write =  tab[line_index][0].split(" ")
+            nom_jour = jour_to_write[0].upper()+date_to_write
+            ax.text((0.28+minutes[line_index]//minutes_dans_journée)*minutes_dans_journée, operation(y, hauteur_jour if updown == 1 else hauteur_jour, updown), nom_jour, fontproperties=jours_font, rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
             x_points = [minutes[line_index]//minutes_dans_journée*minutes_dans_journée, ((minutes[line_index]//minutes_dans_journée)+1)*minutes_dans_journée]
             if updown<0:
                 if x_points[1] == 0.0:
