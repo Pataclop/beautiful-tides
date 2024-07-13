@@ -23,12 +23,14 @@ regular_font = "Arial"
 minutes_dans_journée = 1440
 semaine = ["lu", "ma", "me", "je", "ve", "sa", "di"]
 dossier_images = "IMAGES"
-size_factor = 300
-marge_pointillets = 50
+size_factor = 50
+marge_pointillets = 40
 hauteur_jour = 1.8
 epaisseur_trait_jour = 1.0
 limite_haut_coef = 95
 limite_bas_coef = 35
+header_size = 1.8
+year = ""
 
 #TODO essayer de rendre la taille de tout modifiable de facon harmonieuse via GUI. les espaces entre les machins et les tailles de police surtout.
 # éventuellement les polices aussi. Et les seuils de marée rouge vert. 
@@ -155,7 +157,7 @@ def stack_images_in_order(input_folder, output_filename):
     stacked_images = []
 
     for image_path in image_paths:
-        image = cv2.imread(str(image_path), cv2.IMREAD_UNCHANGED)  # Include the alpha channel.
+        image = cv2.imread(str(image_path), cv2.IMREAD_UNCHANGED)  # Inclure le canal alpha.
         stacked_images.append(image)
 
     max_width = max(image.shape[1] for image in stacked_images)
@@ -166,7 +168,8 @@ def stack_images_in_order(input_folder, output_filename):
     current_y = 0
     for image in stacked_images:
         h, w, _ = image.shape
-        stacked_image[current_y:current_y + h, :w] = image
+        x_offset = (max_width - w) // 2  # Calculer le décalage pour centrer l'image
+        stacked_image[current_y:current_y + h, x_offset:x_offset + w] = image
         current_y += h
 
     cv2.imwrite(output_filename, stacked_image)
@@ -417,6 +420,40 @@ def image_vide(nom):
     image[:, :, 3] = 0  # Canal alpha à 0 pour une transparence complète
     cv2.imwrite("IMAGES/"+nom, image)
 
+
+def header(texte, fond):
+    nom = "header.png"
+    # Dimensions de l'image
+    largeur = int(size_factor * 13.5*header_size)
+    hauteur = int(size_factor * 1.3*header_size)
+
+
+    # Couleurs
+    couleur_fond = (0, 0, 0, 255)  # Noir avec transparence maximale (opaque)
+    couleur_texte = (255, 255, 255, 255)  # Blanc avec transparence maximale (opaque)
+    if not fond:
+        couleur_fond = (255, 255, 255, 0)  # Blanc complètement transparent
+        couleur_texte = (0, 0, 0, 255)  # Noir avec transparence maximale (opaque)
+        texte = '-'.join(texte.split('-')[:-1])
+        nom = "port_name.png"
+
+    # Charger la police
+    chemin_police = "fonts/octin stencil rg.otf"
+    police = ImageFont.truetype(chemin_police, int(size_factor*header_size))  # Taille de la police
+
+    # Créer une nouvelle image RGBA
+    image = Image.new('RGBA', (largeur, hauteur), couleur_fond)
+    draw = ImageDraw.Draw(image)
+    bbox = draw.textbbox((0, 0), texte, font=police)
+    largeur_texte = bbox[2] - bbox[0]
+    hauteur_texte = bbox[3] - bbox[1]
+    position = ((largeur - largeur_texte) // 2, (hauteur - hauteur_texte) * 0.5 // 2)
+    draw.text(position, texte, couleur_texte, font=police)
+
+    # Enregistrer l'image
+    image.save('IMAGES/' + nom)
+
+    
 def stack_images(image1_path, image2_path, output_path):
     # Ouvrir les images avec Pillow
     image1 = Image.open(image1_path)
@@ -442,7 +479,13 @@ def creee_image_fond(height, width, type=1):
     Args:
         height (int): Hauteur de l'image de fond
         width (int): Largeur de l'image de fond
-        type (int): Type de fond (1 = zigzag vague, 2 = bleu flou bulles)
+        type (int): Type de fond (  1 = zigzag vague, 
+                                    2 = bleu flou bulles
+                                    3 = bleu-gris plein
+                                    4 = orange plein
+                                    5 = kaki plein
+                                    6 = bleu vif plein
+                                    7 = bandes bleu orange kaki
 
     Returns:
         image (numpy.ndarray): Image de fond 
@@ -501,17 +544,41 @@ def creee_image_fond(height, width, type=1):
         image_blurred = image.filter(ImageFilter.GaussianBlur(radius=width//80))
         image_blurred.save("colors.png")
 
+    elif type == 3:
+        image = Image.new("RGB", (width, height), (131, 162, 173))
+        image.save("colors.png")
+
+    elif type == 4:
+        image = Image.new("RGB", (width, height), (236, 176, 123))
+        image.save("colors.png")
+
+    elif type == 5:
+        image = Image.new("RGB", (width, height), (159, 171, 151))
+        image.save("colors.png")
+
+    elif type == 6:
+        image = Image.new("RGB", (width, height), (130, 196, 212))
+        image.save("colors.png")
+
+    elif type == 7:
+        #todo le striage de l'image comme il faut
+        image = Image.new("RGB", (width, height), (100, 200, 200))
+        image.save("colors.png")
+
 def creation_image_complete(mois, port, taille, fond, nom_sortie="image_fusionnee.png"):
     cree_dossier_images()
     global size_factor
     size_factor = taille
 
     url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/" + port + "/" 
+    image_vide("0.png")
 
+    header("CALENDRIER DES MARÉES "+year, True)
+    header(port, False)
     image_vide("1.png")
     for m in mois :
-        print(m+" 2024")
-        draw(url+m+"-2024","IMAGES/"+m+"-2024.png")
+        print(m+" "+year)
+        draw(url+m+"-"+year,"IMAGES/"+m+"-"+year+".png")
 
     #image_vide("2.png")
     image_vide("3.png")
@@ -551,7 +618,8 @@ def creation_image_complete(mois, port, taille, fond, nom_sortie="image_fusionne
 #TODO créer une image en tete avec l'année et le nom du port et peut etre d'autres choses je sais pas quoi
 #TODO ca serait bien d'avoir la lune aussi. 
 if __name__ == "__main__":
-    mois = ["juin"]
+    year = "2025"
+    mois = ["janvier", "fevrier", "mars"]
     port = "saint-jean-de-luz-61"
-    creation_image_complete(mois, port, 100, 1)
+    creation_image_complete(mois, port, 100, 3)
 
