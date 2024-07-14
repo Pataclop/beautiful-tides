@@ -23,7 +23,7 @@
 
 
 Affiche les marées sous forme d'onde, en fonction du marnage, avec les heures et les phases importantes de la lune. 
-![Example](https://github.com/Pataclop/beautiful-tides/blob/master/readme_images/demo.jpg)
+![Example Result](https://github.com/Pataclop/beautiful-tides/blob/master/readme_images/demo.jpg)
 
 
 ### Pré requis
