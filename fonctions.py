@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 import numpy as np
 import cv2
 import requests
@@ -12,6 +14,7 @@ from matplotlib.font_manager import FontProperties
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import os
 import shutil
+Image.MAX_IMAGE_PIXELS = None
 
 font_path = 'fonts/FUTURANEXTDEMIBOLDITALIC.TTF'  # Assurez-vous que le chemin est correct
 font_path2 = 'fonts/FUTURANEXTLIGHT.TTF'
@@ -204,6 +207,14 @@ def recuperation_et_nettoyage_page_web(url):
     t = t.replace("vendredi", "ve")
     t = t.replace("samedi", "sa")
     t = t.replace("dimanche", "di")
+    t = t.replace("Lune gibbeuse decroissante", "")
+    t = t.replace("Lune gibbeuse croissante", "")
+    t = t.replace("Premier croissant de lune", "")
+    t = t.replace("Dernier croissant de lune", "")
+    t = t.replace("Premier quartier de lune", "PR_QRT")
+    t = t.replace("Dernier quartier de lune", "DR_QRT")
+    t = t.replace("Pleine lune", "PL_LUNE")
+    t = t.replace("Nouvelle lune", "NV_LUNE")
     return t
 
 def write_text_on_image(image_path, text, angle, position, font_name, font_size, text_color = (255,255,255,255)):
@@ -225,11 +236,13 @@ def write_text_on_image(image_path, text, angle, position, font_name, font_size,
 
 def draw(link, nom):
     lines = recuperation_et_nettoyage_page_web(link).split('\n')
+    #le tableau stoke les infos qui nous seront utiles pour faire les graphes.
+    # sous la forme tableau de tableaux  ['me 22' '22h26' '3.16m' '35' 'Dernier quartier de lune']
     tab = np.empty((NB_MAREE, 5), dtype=object)
     i = 0
     date = "rien 0"
-    lune = None
     for l in lines:
+        
         if ligne_commence_par_mot(semaine, l):
             date = l
         if l.startswith("Maree"):
@@ -263,14 +276,17 @@ def draw(link, nom):
     for i in range(len(heures)):
         minutes[i] = convert_to_minutes(heures[i])+convert_to_jours(tab[i][0])
     minutes = np.delete(minutes, np.where(minutes == 0))
-    ecarts_successifs = np.diff(minutes)
-    ecart_moyen = np.mean(ecarts_successifs)
 
-    ESPACE_MAREE = ecart_moyen
-    coeficient = np.empty((NB_MAREE), dtype=object)
-    for i in range(len(coeficient)):
+
+    coeficients = np.empty((NB_MAREE), dtype=object)
+    for i in range(len(coeficients)):
         if tab[i][3] is not None :
-            coeficient[i] = (tab[i][3])
+            coeficients[i] = (tab[i][3])
+    
+    lunes = np.empty((NB_MAREE), dtype=object)
+    for i in range(len(lunes)):
+        if tab[i][4] is not None :
+            lunes[i] = (tab[i][4])
 
     # Créer une liste d'abscisses pour les hauteurs
     abscisses = [i*5 for i in range(len(hauteurs))]
@@ -294,9 +310,23 @@ def draw(link, nom):
     angle = 0
     hauteur_précédente =  0.0
     hauteur_précédente_2 = 0.0
+
+    
+
     #TODO il y a un bug occasionnel, je ne sais pas pourquoi, mais pour les pointillets en trait, pour le dernier jour (peut etre pour le premier aussi), 
     #pour le dernier segment complet, le début du segment ne va âs etre raccord avec celui du jour précédent. il y a une marche. il doit y avoir un bug de hauteur précédente ou hauteur précedente 2
     décalage_hauteur_petits_traits = 1.45
+
+    def insere_lune(x, y, phase):
+        image_path = phase+'.png'
+        img = mpimg.imread(image_path)
+        # Spécifiez la position de l'image (en coordonnées de données)
+        x_position = x
+        y_position = y
+        imagebox = OffsetImage(img, zoom=0.1)  # Vous pouvez ajuster le zoom selon vos besoins
+        ab = AnnotationBbox(imagebox, (x_position, y_position), frameon=False)
+        ax.add_artist(ab)
+
 
     def operation(a, b, signe):
         if signe ==1:
@@ -317,6 +347,7 @@ def draw(link, nom):
         """
         if line_index <= 1:
             hauteur_to_update = operation(hauteurs[line_index+4], décalage_hauteur_petits_traits, updown)
+        #ecrit l'heure de la marée
         ax.text(x, operation(y, 0.6 if updown == 1 else 1.0, updown), h, ha='center', va='bottom', fontproperties=font_hauteur, fontsize=15, color='black', weight='bold')
         jour = tab[line_index][0]
         if day != jour:
@@ -329,6 +360,7 @@ def draw(link, nom):
             angle = calculer_angle_entre_points(pt1, pt2)
             jour_to_write, date_to_write =  tab[line_index][0].split(" ")
             nom_jour = jour_to_write[0].upper()+date_to_write
+            #ecrit le nom du jour
             ax.text((0.28+minutes[line_index]//minutes_dans_journée)*minutes_dans_journée, operation(y, hauteur_jour if updown == 1 else hauteur_jour, updown), nom_jour, fontproperties=jours_font, rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
             x_points = [minutes[line_index]//minutes_dans_journée*minutes_dans_journée, ((minutes[line_index]//minutes_dans_journée)+1)*minutes_dans_journée]
             if updown<0:
@@ -357,12 +389,13 @@ def draw(link, nom):
 
     last_coef = 0
     for i in range(5):
-        if coeficient[i] is not None and int(coeficient[i]) >10:
-            last_coef = coeficient[i]   
+        if coeficients[i] is not None and int(coeficients[i]) >10:
+            last_coef = coeficients[i]   
     
     def couleur_coefficient(couleur):
+        #ecrit le coefficient
         ax.text(x, moyenne_hauteur-0.5, str(last_coef), ha='center', va='bottom', fontname=regular_font, fontsize=18, color=couleur, weight='bold')
-    for x, y, c in zip(minutes, hauteurs, coeficient):
+    for x, y, c in zip(minutes, hauteurs, coeficients):
         if c is not None and int(c) > 10 :
             last_coef = c
         if y > moyenne_hauteur :
@@ -372,6 +405,16 @@ def draw(link, nom):
                 couleur_coefficient('forestgreen')
             else :
                 couleur_coefficient('black')
+    
+    #on va mettre la lune là ou il faut
+    compteur = 0
+    for x, y, l in zip(minutes, hauteurs, lunes):
+        if l is not None and l != "":
+            if y < moyenne_hauteur:
+                lunes[compteur+1] = lunes[compteur]
+            else:
+                insere_lune(x-375, moyenne_hauteur+0.35, l)
+        compteur = compteur+1
 
     plt.axis('off')
     largeur_pouces = 80
@@ -389,6 +432,40 @@ def draw(link, nom):
     cv2.imwrite(nom, padded_image)
     #et on écrit le mois
     write_text_on_image(nom, nom[7:-9], 30, (size_factor, size_factor//3), fancy_font, int(size_factor*1.25))
+
+
+
+def create_moon_image():
+
+    def draw_images(phase, size=200):
+        image = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(image)
+        center = size // 2
+        radius = center - 1
+        w = size//20
+
+        if phase == 'PL_LUNE':
+            draw.ellipse((center - radius, center - radius, center + radius, center + radius), fill='white', outline='black', width=w)
+        elif phase == 'NV_LUNE':
+            draw.ellipse((center - radius, center - radius, center + radius, center + radius), fill='black', outline='black', width=w)
+        elif phase == 'PR_QRT':
+            draw.ellipse((center - radius, center - radius, center + radius, center + radius), fill='white', outline='black', width=w)
+            draw.rectangle((center, 0, size, size), fill=(0, 0, 0, 0))
+            draw.line((center, 0, center, size), width=w, fill='black')
+        elif phase == 'DR_QRT':
+            draw.ellipse((center - radius, center - radius, center + radius, center + radius), fill='white', outline='black', width=w)
+            draw.rectangle((0, 0, center, size), fill=(0, 0, 0, 0))
+            draw.line((center, 0, center, size), width=w, fill='black')
+        image.save(phase+ '.png')
+
+
+        
+     
+        return image
+     
+    phases = ['PL_LUNE', 'NV_LUNE', 'PR_QRT', 'DR_QRT']
+    for phase in phases:
+        draw_images(phase)
 
 def combine_images (image1, image2):
     if image1.shape != image2.shape:
@@ -446,8 +523,7 @@ def header(texte, fond):
     position = ((largeur - largeur_texte) // 2, (hauteur - hauteur_texte) * 0.5 // 2)
     draw.text(position, texte, couleur_texte, font=police)
     image.save('IMAGES/' + nom)
-
-    
+ 
 def stack_images(image1_path, image2_path, output_path):
     # Ouvrir les images avec Pillow
     image1 = Image.open(image1_path)
@@ -560,11 +636,12 @@ def creee_image_fond(height, width, type=1):
         cv2.imwrite('colors.png', image)
 
     elif type == 7:
+        ratio = 76.45  # pixels to size_factor ratio
         top_color = (173, 162, 131)
         middle_color = (123, 176, 236)
         bottom_color = (151, 171, 159)
-        hauteur1 = int(29.35*size_factor)
-        hauteur2 =int(55.35*size_factor)
+        hauteur1 = int(height/2.567)
+        hauteur2 =int(2.009*height/3)
 
         image = np.zeros((height, width, 3), dtype=np.uint8)
 
@@ -573,13 +650,11 @@ def creee_image_fond(height, width, type=1):
         image[hauteur2:] = bottom_color
         cv2.imwrite('colors.png', image)
 
-    elif type == 8:
-        return
-
 def creation_image_complete(mois, port, taille, fond, nom_sortie="image_fusionnee.png"):
     cree_dossier_images()
     global size_factor
     size_factor = taille
+    create_moon_image()
 
     url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/" + port + "/" 
     image_vide("0.png")
@@ -600,6 +675,7 @@ def creation_image_complete(mois, port, taille, fond, nom_sortie="image_fusionne
     hauteur, largeur, c = img.shape
 
     creee_image_fond(hauteur, largeur, fond)
+    
 
     # Charger les images RGBA et RGB
     image_rgba = cv2.imread('out.png', cv2.IMREAD_UNCHANGED)  # Assurez-vous que l'image RGBA est lue correctement (avec les 4 canaux)
@@ -631,5 +707,5 @@ if __name__ == "__main__":
     year = "2025"
     mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
     port = "saint-jean-de-luz-61"
-    creation_image_complete(mois, port, 400, 8)
+    creation_image_complete(mois, port, 150, 7)
 
