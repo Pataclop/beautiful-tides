@@ -15,6 +15,7 @@ import shutil
 
 font_path = 'fonts/FUTURANEXTDEMIBOLDITALIC.TTF'  # Assurez-vous que le chemin est correct
 font_path2 = 'fonts/FUTURANEXTLIGHT.TTF'
+header_font = "fonts/octin stencil rg.otf"
 font_hauteur = FontProperties(fname=font_path2)
 jours_font = FontProperties(fname=font_path)
 NB_MAREE = 124
@@ -23,9 +24,9 @@ regular_font = "Arial"
 minutes_dans_journée = 1440
 semaine = ["lu", "ma", "me", "je", "ve", "sa", "di"]
 dossier_images = "IMAGES"
-size_factor = 50
+size_factor = 0
 marge_pointillets = 40
-hauteur_jour = 1.8
+hauteur_jour = 1.9
 epaisseur_trait_jour = 1.0
 limite_haut_coef = 95
 limite_bas_coef = 35
@@ -35,9 +36,7 @@ year = ""
 #TODO essayer de rendre la taille de tout modifiable de facon harmonieuse via GUI. les espaces entre les machins et les tailles de police surtout.
 # éventuellement les polices aussi. Et les seuils de marée rouge vert. 
 
-# raise error if sizefactor is less than 12
-if size_factor < 10:
-    raise ValueError("size factor must be >10")
+
 
 
 def cree_dossier_images():
@@ -438,10 +437,7 @@ def header(texte, fond):
         nom = "port_name.png"
 
     # Charger la police
-    chemin_police = "fonts/octin stencil rg.otf"
-    police = ImageFont.truetype(chemin_police, int(size_factor*header_size))  # Taille de la police
-
-    # Créer une nouvelle image RGBA
+    police = ImageFont.truetype(header_font, int(size_factor*header_size))  # Taille de la police
     image = Image.new('RGBA', (largeur, hauteur), couleur_fond)
     draw = ImageDraw.Draw(image)
     bbox = draw.textbbox((0, 0), texte, font=police)
@@ -449,8 +445,6 @@ def header(texte, fond):
     hauteur_texte = bbox[3] - bbox[1]
     position = ((largeur - largeur_texte) // 2, (hauteur - hauteur_texte) * 0.5 // 2)
     draw.text(position, texte, couleur_texte, font=police)
-
-    # Enregistrer l'image
     image.save('IMAGES/' + nom)
 
     
@@ -545,25 +539,42 @@ def creee_image_fond(height, width, type=1):
         image_blurred.save("colors.png")
 
     elif type == 3:
-        image = Image.new("RGB", (width, height), (131, 162, 173))
-        image.save("colors.png")
+        image = np.zeros((width, height, 3), dtype=np.uint8)
+        image[:] = (173, 162, 131)
+        cv2.imwrite('colors.png', image)
 
     elif type == 4:
-        image = Image.new("RGB", (width, height), (236, 176, 123))
-        image.save("colors.png")
+        image = np.zeros((width, height, 3), dtype=np.uint8)
+        image[:] = (123, 176, 236)
+        cv2.imwrite('colors.png', image)
 
     elif type == 5:
-        image = Image.new("RGB", (width, height), (159, 171, 151))
-        image.save("colors.png")
+        image = np.zeros((width, height, 3), dtype=np.uint8)
+        image[:] = (151, 171, 159)
+        cv2.imwrite('colors.png', image)
+
 
     elif type == 6:
-        image = Image.new("RGB", (width, height), (130, 196, 212))
-        image.save("colors.png")
+        image = np.zeros((width, height, 3), dtype=np.uint8)
+        image[:] = (212, 196, 130)
+        cv2.imwrite('colors.png', image)
 
     elif type == 7:
-        #todo le striage de l'image comme il faut
-        image = Image.new("RGB", (width, height), (100, 200, 200))
-        image.save("colors.png")
+        top_color = (173, 162, 131)
+        middle_color = (123, 176, 236)
+        bottom_color = (151, 171, 159)
+        hauteur1 = int(29.35*size_factor)
+        hauteur2 =int(55.35*size_factor)
+
+        image = np.zeros((height, width, 3), dtype=np.uint8)
+
+        image[:hauteur1] = top_color
+        image[hauteur1:hauteur2] = middle_color
+        image[hauteur2:] = bottom_color
+        cv2.imwrite('colors.png', image)
+
+    elif type == 8:
+        return
 
 def creation_image_complete(mois, port, taille, fond, nom_sortie="image_fusionnee.png"):
     cree_dossier_images()
@@ -580,9 +591,8 @@ def creation_image_complete(mois, port, taille, fond, nom_sortie="image_fusionne
         print(m+" "+year)
         draw(url+m+"-"+year,"IMAGES/"+m+"-"+year+".png")
 
-    #image_vide("2.png")
+    image_vide("2.png")
     image_vide("3.png")
-    image_vide("4.png")
 
     stack_images_in_order("IMAGES", "out.png")
 
@@ -619,7 +629,7 @@ def creation_image_complete(mois, port, taille, fond, nom_sortie="image_fusionne
 #TODO ca serait bien d'avoir la lune aussi. 
 if __name__ == "__main__":
     year = "2025"
-    mois = ["janvier", "fevrier", "mars"]
+    mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
     port = "saint-jean-de-luz-61"
-    creation_image_complete(mois, port, 100, 3)
+    creation_image_complete(mois, port, 400, 8)
 
