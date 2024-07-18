@@ -46,13 +46,13 @@ Please shoot us a message at: project.movinyl@gmail.com (oui rien à voir avec l
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/Pataclop/Movinyl.svg?style=flat-square
-[contributors-url]: https://github.com/Pataclop/Movinyl/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/Pataclop/Movinyl.svg?style=flat-square
-[forks-url]: https://github.com/Pataclop/Movinyl/network/members
-[stars-shield]: https://img.shields.io/github/stars/Pataclop/Movinyl.svg?style=flat-square
-[stars-url]: https://github.com/Pataclop/Movinyl/stargazers
-[issues-shield]: https://img.shields.io/github/issues/Pataclop/Movinyl.svg?style=flat-square
-[issues-url]: https://github.com/Pataclop/Movinyl/issues
-[license-shield]: https://img.shields.io/github/license/Pataclop/Movinyl.svg?style=flat-square
-[license-url]: https://github.com/Pataclop/Movinyl/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/Pataclop/beautiful-tides.svg?style=flat-square
+[contributors-url]: https://github.com/Pataclop/beautiful-tides/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/Pataclop/beautiful-tides.svg?style=flat-square
+[forks-url]: https://github.com/Pataclop/beautiful-tides/network/members
+[stars-shield]: https://img.shields.io/github/stars/Pataclop/beautiful-tides.svg?style=flat-square
+[stars-url]: https://github.com/Pataclop/beautiful-tides/stargazers
+[issues-shield]: https://img.shields.io/github/issues/Pataclop/beautiful-tides.svg?style=flat-square
+[issues-url]: https://github.com/Pataclop/beautiful-tides/issues
+[license-shield]: https://img.shields.io/github/license/Pataclop/beautiful-tides.svg?style=flat-square
+[license-url]: https://github.com/Pataclop/beautiful-tides/blob/master/LICENSE.txt
