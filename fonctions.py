@@ -176,14 +176,8 @@ def stack_images_in_order(input_folder, output_filename):
 
     cv2.imwrite(output_filename, stacked_image)
 
-def recuperation_et_nettoyage_page_web(url):
-    response = requests.get(url)
-    if response.status_code != 200:
-        print("Error: %s" % response.status_code)
-        exit(1)
-        
-    soup = BeautifulSoup(response.content, "html.parser")
-    t = clean(soup)
+def nettoyage_page_web(text):
+    t = clean(text)
     t = t.replace(',', '\n')
     t = unidecode(t)
     t = output_text = remove_lines_until_marker(t, "101-129")
@@ -234,8 +228,8 @@ def write_text_on_image(image_path, text, angle, position, font_name, font_size,
     im.paste(w, position, w)
     im.save(image_path)
 
-def draw(link, nom):
-    lines = recuperation_et_nettoyage_page_web(link).split('\n')
+def draw(url, port, month, year, nom):
+    lines = recuperation_et_sauvegarde_url(url, port, month, year).split('\n')
     #le tableau stoke les infos qui nous seront utiles pour faire les graphes.
     # sous la forme tableau de tableaux  ['me 22' '22h26' '3.16m' '35' 'Dernier quartier de lune']
     tab = np.empty((NB_MAREE, 5), dtype=object)
@@ -650,13 +644,51 @@ def creee_image_fond(height, width, type=1):
         image[hauteur2:] = bottom_color
         cv2.imwrite('colors.png', image)
 
+
+
+def recuperation_et_sauvegarde_url(url, port, m, year):
+
+    # si le fichier (les marées) existent deja, on va pas les re récupérer
+    path_to_tide_file = f"TIDES/tides-{port}-{m}-{year}.txt"
+    if os.path.exists(path_to_tide_file):
+        print("fichier existe deja : " + path_to_tide_file)
+        with open(path_to_tide_file, "r", encoding="utf-8") as fichier:
+            texte = fichier.read()
+            return texte
+        
+    # et sinon, on va les récupérer pour le port / mois / an qui vont bien
+    print ("fichier n'existe pas : " + path_to_tide_file)
+    link = f"{url}/{port}/{m}-{year}"
+    print (link)
+
+    response = requests.get(link)
+    
+    # Vérification de la réponse
+    if response.status_code != 200:
+        print("Error: %s" % response.status_code)
+        return None
+    
+    # Parsing du contenu HTML avec BeautifulSoup
+    soup = BeautifulSoup(response.content, "html.parser")
+    
+    # Sauvegarde du contenu de soup dans un fichier texte
+    if not os.path.exists("TIDES"):
+        os.makedirs("TIDES")
+
+    soup = nettoyage_page_web(soup)
+    with open(path_to_tide_file, "w", encoding="utf-8") as fichier:
+        fichier.write(str(soup))
+    return soup
+
+
+
 def creation_image_complete(mois, port, taille, fond, nom_sortie="image_fusionnee.png"):
     cree_dossier_images()
     global size_factor
     size_factor = taille
     create_moon_image()
 
-    url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/" + port + "/" 
+    url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees"
     image_vide("0.png")
 
     header("CALENDRIER DES MARÉES "+year, True)
@@ -664,7 +696,7 @@ def creation_image_complete(mois, port, taille, fond, nom_sortie="image_fusionne
     image_vide("1.png")
     for m in mois :
         print(m+" "+year)
-        draw(url+m+"-"+year,"IMAGES/"+m+"-"+year+".png")
+        draw(url, port, m, year,"IMAGES/"+m+"-"+year+".png")
 
     image_vide("2.png")
     image_vide("3.png")
@@ -705,7 +737,7 @@ def creation_image_complete(mois, port, taille, fond, nom_sortie="image_fusionne
 #TODO ca serait bien d'avoir la lune aussi. 
 if __name__ == "__main__":
     year = "2025"
-    mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
+    mois = ["janvier", "fevrier", ]
     port = "saint-jean-de-luz-61"
     creation_image_complete(mois, port, 150, 7)
 
