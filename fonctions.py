@@ -651,13 +651,11 @@ def recuperation_et_sauvegarde_url(url, port, m, year):
     # si le fichier (les marées) existent deja, on va pas les re récupérer
     path_to_tide_file = f"TIDES/tides-{port}-{m}-{year}.txt"
     if os.path.exists(path_to_tide_file):
-        print("fichier existe deja : " + path_to_tide_file)
         with open(path_to_tide_file, "r", encoding="utf-8") as fichier:
             texte = fichier.read()
             return texte
         
     # et sinon, on va les récupérer pour le port / mois / an qui vont bien
-    print ("fichier n'existe pas : " + path_to_tide_file)
     link = f"{url}/{port}/{m}-{year}"
     print (link)
 
@@ -706,7 +704,10 @@ def creation_image_complete(mois, port, taille, fond, nom_sortie="image_fusionne
     img = cv2.imread("out.png")
     hauteur, largeur, c = img.shape
 
+    print("generate background")
     creee_image_fond(hauteur, largeur, fond)
+    
+    print("combining images")
     
 
     # Charger les images RGBA et RGB
@@ -737,7 +738,7 @@ def creation_image_complete(mois, port, taille, fond, nom_sortie="image_fusionne
 #TODO ca serait bien d'avoir la lune aussi. 
 if __name__ == "__main__":
     year = "2025"
-    mois = ["janvier", "fevrier", ]
-    port = "saint-jean-de-luz-61"
-    creation_image_complete(mois, port, 150, 7)
+    mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
+    port = "le-verdon-sur-mer-1036"
+    creation_image_complete(mois, port, 60, 7, port+"_"+year+".png")
 
