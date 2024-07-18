@@ -416,6 +416,7 @@ def draw(url, port, month, year, nom):
     fig = plt.gcf()
     fig.set_size_inches(largeur_pouces, hauteur_pouces)
     plt.savefig(nom, transparent=True, dpi=size_factor, bbox_inches='tight', format='png')
+    plt.close()
 
     #ici on élargit l'image (on rajoute une zone a gauche) pour avoir la place plus tard d'écrire le mois
     image = cv2.imread(nom, cv2.IMREAD_UNCHANGED)
@@ -740,5 +741,14 @@ if __name__ == "__main__":
     year = "2025"
     mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
     port = "le-verdon-sur-mer-1036"
-    creation_image_complete(mois, port, 60, 7, port+"_"+year+".png")
+    
+    creation_image_complete(mois, port, 40, 7, port+"_"+year+".png")
+
+    texte = ""
+    if os.path.exists("ports.txt"):
+        with open("ports.txt", "r", encoding="utf-8") as fichier:
+            texte = fichier.read()
+    
+    #for port in texte.split("\n"):
+    #    creation_image_complete(mois, port, 20, 7, port+"_"+year+".png")
 
