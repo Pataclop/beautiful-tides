@@ -1,0 +1,245 @@
+ve 1
+Maree basse 04h38 1.86m
+Maree haute 09h56 4.19m 47
+Maree basse 16h58 2.03m
+Maree haute 22h20 4.12m 42
+Lune : PR_QRT
+Saint Alphonse
+Soleil : 06h50 21h45
+sa 2
+Maree basse 05h27 2.12m
+Maree haute 11h02 3.98m 37
+Maree basse 17h55 2.24m
+Maree haute 23h35 3.88m 33
+Lune : 
+Saint Julien
+Soleil : 06h51 21h44
+di 3
+Maree basse 06h25 2.31m
+Maree haute 12h43 3.90m 30
+Maree basse 18h59 2.33m
+Lune : 
+Sainte Lydie
+Soleil : 06h52 21h43
+lu 4
+Maree haute 01h18 3.81m
+Maree basse 07h35 2.35m 29
+Maree haute 14h10 4.02m
+Maree basse 20h09 2.27m 31
+Lune : 
+Saint Jean-Marie
+Soleil : 06h54 21h41
+ma 5
+Maree haute 02h48 3.93m
+Maree basse 08h47 2.23m 34
+Maree haute 15h12 4.24m
+Maree basse 21h16 2.06m 38
+Lune : 
+Saint Abel
+Soleil : 06h55 21h40
+me 6
+Maree haute 03h46 4.15m
+Maree basse 09h46 1.99m 43
+Maree haute 15h58 4.50m
+Maree basse 22h09 1.77m 49
+Lune : 
+Saint Octavien
+Soleil : 06h56 21h38
+je 7
+Maree haute 04h29 4.39m
+Maree basse 10h30 1.70m 55
+Maree haute 16h38 4.77m
+Maree basse 22h52 1.47m 61
+Lune : 
+Saint Gaetan
+Soleil : 06h58 21h37
+ve 8
+Maree haute 05h04 4.64m
+Maree basse 11h09 1.42m 67
+Maree haute 17h14 5.04m
+Maree basse 23h31 1.18m 73
+Lune : 
+Saint Dominique
+Soleil : 06h59 21h35
+sa 9
+Maree haute 05h39 4.87m
+Maree basse 11h48 1.17m 78
+Maree haute 17h52 5.26m 83
+Lune : PL_LUNE
+Saint Amour
+Soleil : 07h00 21h33
+di 10
+Maree basse 00h11 0.93m
+Maree haute 06h14 5.05m 87
+Maree basse 12h26 0.97m
+Maree haute 18h30 5.41m 90
+Lune : 
+Saint Laurent
+Soleil : 07h01 21h32
+lu 11
+Maree basse 00h50 0.75m
+Maree haute 06h48 5.16m 93
+Maree basse 13h05 0.84m
+Maree haute 19h08 5.49m 95
+Lune : 
+Sainte Claire
+Soleil : 07h03 21h30
+ma 12
+Maree basse 01h30 0.67m
+Maree haute 07h24 5.18m 95
+Maree basse 13h45 0.81m
+Maree haute 19h46 5.45m 95
+Lune : 
+Sainte Clarisse
+Soleil : 07h04 21h29
+me 13
+Maree basse 02h10 0.70m
+Maree haute 07h58 5.12m 93
+Maree basse 14h27 0.88m
+Maree haute 20h24 5.30m 90
+Lune : 
+Saint Hippolyte
+Soleil : 07h05 21h27
+je 14
+Maree basse 02h52 0.83m
+Maree haute 08h34 4.95m 86
+Maree basse 15h12 1.04m
+Maree haute 21h05 5.04m 81
+Lune : 
+Saint Evrard
+Soleil : 07h07 21h25
+ve 15
+Maree basse 03h38 1.07m
+Maree haute 09h13 4.72m 75
+Maree basse 16h03 1.29m
+Maree haute 21h53 4.71m 68
+Lune : 
+Sainte
+Marie
+Soleil : 07h08 21h23
+sa 16
+Maree basse 04h29 1.39m
+Maree haute 10h05 4.44m 62
+Maree basse 17h01 1.58m
+Maree haute 23h00 4.37m 55
+Lune : 
+Saint Armel
+Soleil : 07h09 21h22
+di 17
+Maree basse 05h29 1.72m
+Maree haute 11h37 4.20m 49
+Maree basse 18h11 1.82m
+Lune : DR_QRT
+Sainte Hyacinthe
+Soleil : 07h11 21h20
+lu 18
+Maree haute 00h50 4.16m
+Maree basse 06h41 1.95m 45
+Maree haute 13h42 4.23m
+Maree basse 19h31 1.90m 43
+Lune : 
+Sainte Helene
+Soleil : 07h12 21h18
+ma 19
+Maree haute 02h23 4.23m
+Maree basse 08h03 1.95m 44
+Maree haute 14h58 4.46m
+Maree basse 20h53 1.71m 48
+Lune : 
+Saint Jean
+Soleil : 07h13 21h16
+me 20
+Maree haute 03h33 4.43m
+Maree basse 09h17 1.72m 54
+Maree haute 15h56 4.74m
+Maree basse 21h56 1.40m 60
+Lune : 
+Saint Bernard
+Soleil : 07h15 21h15
+je 21
+Maree haute 04h26 4.67m
+Maree basse 10h15 1.40m 67
+Maree haute 16h43 4.99m
+Maree basse 22h47 1.09m 73
+Lune : 
+Saint Christophe
+Soleil : 07h16 21h13
+ve 22
+Maree haute 05h08 4.87m
+Maree basse 11h01 1.12m 78
+Maree haute 17h21 5.19m
+Maree basse 23h31 0.88m 83
+Lune : 
+Saint Fabrice
+Soleil : 07h17 21h11
+sa 23
+Maree haute 05h42 5.01m
+Maree basse 11h44 0.94m 87
+Maree haute 17h55 5.31m 89
+Lune : NV_LUNE
+Sainte Rose
+Soleil : 07h19 21h09
+di 24
+Maree basse 00h13 0.76m
+Maree haute 06h12 5.10m 91
+Maree basse 12h24 0.85m
+Maree haute 18h25 5.35m 92
+Lune : 
+Saint Barthelemy
+Soleil : 07h20 21h07
+lu 25
+Maree basse 00h52 0.76m
+Maree haute 06h40 5.12m 92
+Maree basse 13h02 0.88m
+Maree haute 18h52 5.31m 91
+Lune : 
+Saint Louis
+Soleil : 07h21 21h05
+ma 26
+Maree basse 01h28 0.86m
+Maree haute 07h04 5.09m 89
+Maree basse 13h38 0.99m
+Maree haute 19h18 5.19m 86
+Lune : 
+Sainte Natacha
+Soleil : 07h23 21h03
+me 27
+Maree basse 02h03 1.04m
+Maree haute 07h31 4.98m 82
+Maree basse 14h13 1.19m
+Maree haute 19h45 5.01m 78
+Lune : 
+Sainte Monique
+Soleil : 07h24 21h02
+je 28
+Maree basse 02h35 1.28m
+Maree haute 07h58 4.83m 73
+Maree basse 14h47 1.44m
+Maree haute 20h13 4.76m 68
+Lune : 
+Saint Augustin
+Soleil : 07h25 21h00
+ve 29
+Maree basse 03h08 1.57m
+Maree haute 08h27 4.60m 62
+Maree basse 15h22 1.72m
+Maree haute 20h42 4.47m 56
+Lune : 
+Sainte Sabine
+Soleil : 07h27 20h58
+sa 30
+Maree basse 03h43 1.86m
+Maree haute 09h00 4.33m 50
+Maree basse 16h04 2.02m
+Maree haute 21h16 4.16m 44
+Lune : PR_QRT
+Saint Fiacre
+Soleil : 07h28 20h56
+di 31
+Maree basse 04h27 2.17m
+Maree haute 09h44 4.05m 37
+Maree basse 16h57 2.29m
+Maree haute 22h08 3.84m 32
+Lune : 
+Saint Aristide
+Soleil : 07h29 20h54

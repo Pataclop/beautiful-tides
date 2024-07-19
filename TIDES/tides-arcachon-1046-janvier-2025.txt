@@ -1,0 +1,247 @@
+me 1
+Maree haute 06h14 4.23m
+Maree basse 12h26 0.67m 80
+Maree haute 18h37 4.03m 81
+Lune : 
+Sainte Euphrosine
+Soleil : 08h41 17h35
+je 2
+Maree basse 00h43 0.76m
+Maree haute 06h54 4.28m 82
+Maree basse 13h09 0.62m
+Maree haute 19h18 4.04m 83
+Lune : 
+Saint Basile
+Soleil : 08h41 17h36
+ve 3
+Maree basse 01h25 0.74m
+Maree haute 07h37 4.28m 82
+Maree basse 13h51 0.62m
+Maree haute 20h00 4.00m 81
+Lune : 
+Sainte Genevieve
+Soleil : 08h41 17h36
+sa 4
+Maree basse 02h06 0.78m
+Maree haute 08h21 4.24m 80
+Maree basse 14h33 0.69m
+Maree haute 20h45 3.91m 78
+Lune : 
+Saint Odilon
+Soleil : 08h41 17h37
+di 5
+Maree basse 02h49 0.85m
+Maree haute 09h08 4.13m 75
+Maree basse 15h17 0.79m
+Maree haute 21h34 3.79m 72
+Lune : 
+Saint Edouard
+Soleil : 08h41 17h38
+lu 6
+Maree basse 03h34 0.95m
+Maree haute 09h59 3.99m 68
+Maree basse 16h05 0.93m
+Maree haute 22h28 3.65m 64
+Lune : PR_QRT
+Sainte Melaine
+Soleil : 08h41 17h39
+ma 7
+Maree basse 04h27 1.06m
+Maree haute 10h57 3.84m 61
+Maree basse 17h01 1.07m
+Maree haute 23h33 3.56m 58
+Lune : 
+Saint Raymond
+Soleil : 08h41 17h41
+me 8
+Maree basse 05h29 1.16m
+Maree haute 12h06 3.73m 55
+Maree basse 18h08 1.17m
+Lune : 
+Saint Lucien
+Soleil : 08h40 17h42
+je 9
+Maree haute 00h46 3.56m
+Maree basse 06h42 1.19m 54
+Maree haute 13h19 3.69m
+Maree basse 19h19 1.18m 54
+Lune : 
+Saint Alix
+Soleil : 08h40 17h43
+ve 10
+Maree haute 01h56 3.65m
+Maree basse 07h55 1.12m 55
+Maree haute 14h29 3.74m
+Maree basse 20h29 1.11m 58
+Lune : 
+Saint Guillaume
+Soleil : 08h40 17h44
+sa 11
+Maree haute 02h59 3.82m
+Maree basse 09h05 0.98m 61
+Maree haute 15h32 3.85m
+Maree basse 21h33 0.99m 65
+Lune : 
+Saint Paulin
+Soleil : 08h39 17h45
+di 12
+Maree haute 03h57 4.01m
+Maree basse 10h07 0.82m 69
+Maree haute 16h27 3.97m
+Maree basse 22h30 0.86m 74
+Lune : 
+Sainte Tatiana
+Soleil : 08h39 17h46
+lu 13
+Maree haute 04h48 4.18m
+Maree basse 11h03 0.68m 77
+Maree haute 17h17 4.07m
+Maree basse 23h20 0.77m 81
+Lune : 
+Sainte Yvette
+Soleil : 08h38 17h47
+ma 14
+Maree haute 05h36 4.30m
+Maree basse 11h52 0.60m 83
+Maree haute 18h02 4.11m 85
+Lune : 
+Sainte Nina
+Soleil : 08h38 17h49
+me 15
+Maree basse 00h05 0.71m
+Maree haute 06h20 4.35m 86
+Maree basse 12h35 0.59m
+Maree haute 18h43 4.10m 86
+Lune : PL_LUNE
+Saint Remi
+Soleil : 08h37 17h50
+je 16
+Maree basse 00h44 0.70m
+Maree haute 07h00 4.32m 86
+Maree basse 13h13 0.63m
+Maree haute 19h21 4.03m 85
+Lune : 
+Saint
+Marcel
+Soleil : 08h37 17h51
+ve 17
+Maree basse 01h20 0.74m
+Maree haute 07h36 4.22m 83
+Maree basse 13h46 0.72m
+Maree haute 19h55 3.91m 80
+Lune : 
+Sainte Roseline
+Soleil : 08h36 17h52
+sa 18
+Maree basse 01h53 0.81m
+Maree haute 08h09 4.08m 76
+Maree basse 14h19 0.84m
+Maree haute 20h26 3.78m 72
+Lune : 
+Sainte Prisca
+Soleil : 08h36 17h54
+di 19
+Maree basse 02h25 0.92m
+Maree haute 08h41 3.91m 68
+Maree basse 14h50 0.99m
+Maree haute 20h58 3.63m 63
+Lune : 
+Saint
+Marius
+Soleil : 08h35 17h55
+lu 20
+Maree basse 02h57 1.08m
+Maree haute 09h15 3.72m 59
+Maree basse 15h22 1.17m
+Maree haute 21h36 3.46m 53
+Lune : 
+Saint Sebastien
+Soleil : 08h34 17h56
+ma 21
+Maree basse 03h31 1.26m
+Maree haute 09h56 3.51m 48
+Maree basse 15h57 1.36m
+Maree haute 22h24 3.29m 43
+Lune : 
+Sainte Agnes
+Soleil : 08h33 17h58
+me 22
+Maree basse 04h11 1.45m
+Maree haute 10h48 3.30m 39
+Maree basse 16h41 1.54m
+Maree haute 23h27 3.17m 35
+Lune : DR_QRT
+Saint Vincent
+Soleil : 08h33 17h59
+je 23
+Maree basse 05h07 1.62m
+Maree haute 11h57 3.16m 32
+Maree basse 17h53 1.68m
+Lune : 
+Saint Barnard
+Soleil : 08h32 18h00
+ve 24
+Maree haute 00h39 3.15m
+Maree basse 06h36 1.68m 31
+Maree haute 13h12 3.13m
+Maree basse 19h20 1.65m 31
+Lune : 
+Saint Francois
+Soleil : 08h31 18h02
+sa 25
+Maree haute 01h52 3.26m
+Maree basse 07h53 1.55m 34
+Maree haute 14h29 3.25m
+Maree basse 20h26 1.48m 37
+Lune : 
+Saint Paul
+Soleil : 08h30 18h03
+di 26
+Maree haute 02h58 3.47m
+Maree basse 08h55 1.34m 43
+Maree haute 15h31 3.45m
+Maree basse 21h22 1.27m 48
+Lune : 
+Sainte Paule
+Soleil : 08h29 18h05
+lu 27
+Maree haute 03h52 3.73m
+Maree basse 09h51 1.09m 55
+Maree haute 16h20 3.69m
+Maree basse 22h14 1.04m 61
+Lune : 
+Sainte Angele
+Soleil : 08h28 18h06
+ma 28
+Maree haute 04h38 3.98m
+Maree basse 10h42 0.85m 67
+Maree haute 17h04 3.91m
+Maree basse 23h03 0.83m 73
+Lune : 
+Saint Thomas
+Soleil : 08h27 18h07
+me 29
+Maree haute 05h21 4.21m
+Maree basse 11h31 0.63m 79
+Maree haute 17h46 4.09m
+Maree basse 23h50 0.64m 84
+Lune : NV_LUNE
+Saint Gildas
+Soleil : 08h26 18h09
+je 30
+Maree haute 06h02 4.39m
+Maree basse 12h16 0.46m 89
+Maree haute 18h26 4.22m 93
+Lune : 
+Sainte
+Martine
+Soleil : 08h25 18h10
+ve 31
+Maree basse 00h33 0.50m
+Maree haute 06h43 4.51m 96
+Maree basse 12h59 0.36m
+Maree haute 19h05 4.28m 98
+Lune : 
+Sainte
+Marcelle
+Soleil : 08h24 18h11

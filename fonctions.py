@@ -741,9 +741,8 @@ if __name__ == "__main__":
     year = "2025"
     mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
     port = "le-verdon-sur-mer-1036"
+    creation_image_complete(mois, port, 60, 7, port+"_"+year+".png")
     
-    creation_image_complete(mois, port, 40, 7, port+"_"+year+".png")
-
     texte = ""
     if os.path.exists("ports.txt"):
         with open("ports.txt", "r", encoding="utf-8") as fichier:
