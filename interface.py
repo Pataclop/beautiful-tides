@@ -1,239 +1,87 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QPushButton, QLabel, QScrollArea, QAbstractItemView, QComboBox, QSlider
-from PyQt5.QtGui import QPixmap, QWheelEvent, QColor
-from PyQt5.QtCore import Qt
-from urllib.request import urlopen
-import requests
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QListWidget, QPushButton, QMessageBox, QComboBox, QLabel, QCheckBox, QGridLayout
 import fonctions
-class MainWindow(QMainWindow):
+class PortsSelector(QWidget):
     def __init__(self):
         super().__init__()
-
-        self.setWindowTitle("Choix Parametres")
-        self.setGeometry(50, 50, 1700, 800)
-
-        self.central_widget = QWidget()
-        self.setCentralWidget(self.central_widget)
-
-        self.layout = QHBoxLayout(self.central_widget)
-
-        self.year_selector = QListWidget()
-        self.year_selector.setFixedWidth(50)
-        self.year_selector.addItems(["2024", "2025", "2026"]) # Ajoutez d'autres années si nécessaire
-        self.year_selector.itemSelectionChanged.connect(self.on_month_selection_changed)
-
-    #TODO il faudrait un truc pour savoir dans quel ordre se servir des trucs. 1 - port   2- année   3- mois   4- créer
-
-        self.month_list = QListWidget()
-        self.month_list.setFixedWidth(100)
-        self.month_list.addItems(["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"])
-        self.month_list.setSelectionMode(QAbstractItemView.MultiSelection)
-
-        self.port_selector = QListWidget()
-        self.port_selector.setFixedWidth(150)
-        #il faudrait un truc pour afficher le nom joli mais renvoyer le nom moche complet
-        self.port_selector.addItems(["brest-4", "dunkerque-7", "paimpol-957", "loctudy-987", "lorient-57", "pornic-1020", "ile-d-yeu-port-joinville-1023", "la-rochelle-ville-1027", "ile-de-re-saint-martin-1026", "saint-denis-d-oleron-1067", "le-verdon-sur-mer-1036", "cap-ferret-1045", "vieux-boucau-1052", "saint-jean-de-luz-61"])
-
-        self.scroll_area = QScrollArea()
-        self.scroll_area.setFixedWidth(1300)
-        self.scroll_area.setFixedHeight(600)
-        self.scroll_area.setWidgetResizable(True)
-
-        self.image_label = QLabel()
-        self.scroll_area.setWidget(self.image_label)
-
-
-
-        self.preview_button = QPushButton("preview")
-        self.preview_button.clicked.connect(self.preview)
-
-        self.comboBox = QComboBox(self)
-        self.comboBox.addItem("Fond 1")
-        self.comboBox.addItem("Fond 2")
-
-        self.slider_hauteur_jour = QSlider(Qt.Horizontal)
-        self.slider_hauteur_jour.setMinimum(0) 
-        self.slider_hauteur_jour.setMaximum(50)   
-        self.slider_hauteur_jour.setValue(20)
-        self.slider_hauteur_jour.setTickInterval(1)  
-        self.slider_hauteur_jour.setTickPosition(QSlider.TicksBelow)
-        self.slider_hauteur_jour.setFixedWidth(150)
-
-
-        self.label_hauteur_jour = QLabel('Hauteur jour : 0.0')
-
-
-        self.slider_epaisseur_trait_jour = QSlider(Qt.Horizontal)
-        self.slider_epaisseur_trait_jour.setMinimum(0)  
-        self.slider_epaisseur_trait_jour.setMaximum(100)   
-        self.slider_epaisseur_trait_jour.setValue(10)
-        self.slider_epaisseur_trait_jour.setTickInterval(1)  
-        self.slider_epaisseur_trait_jour.setTickPosition(QSlider.TicksBelow)
-        self.slider_epaisseur_trait_jour.setFixedWidth(150)
-
-
-        self.label_epaisseur_trait_jour = QLabel('Epaisseur trait jour : 0.0')
-
-
-        self.slider_limite_haut_coef = QSlider(Qt.Horizontal)
-        self.slider_limite_haut_coef.setMinimum(70)  
-        self.slider_limite_haut_coef.setMaximum(120)   
-        self.slider_limite_haut_coef.setValue(95)
-        self.slider_limite_haut_coef.setTickInterval(1)  
-        self.slider_limite_haut_coef.setTickPosition(QSlider.TicksBelow)
-        self.slider_limite_haut_coef.setFixedWidth(150)
-
-
-        self.label_limite_haut_coef = QLabel('Limite haut coef : 0.0')
-
-        self.slider_limite_bas_coef = QSlider(Qt.Horizontal)
-        self.slider_limite_bas_coef.setMinimum(20)  
-        self.slider_limite_bas_coef.setMaximum(50)   
-        self.slider_limite_bas_coef.setValue(35)
-        self.slider_limite_bas_coef.setTickInterval(1)  
-        self.slider_limite_bas_coef.setTickPosition(QSlider.TicksBelow)
-        self.slider_limite_bas_coef.setFixedWidth(150)
-
-
-        self.label_limite_bas_coef = QLabel('Limite bas coef : 0.0')
-
-        self.slider_hauteur_jour.valueChanged.connect(self.updateLabel_hauteur_jour)
-        self.slider_epaisseur_trait_jour.valueChanged.connect(self.updateLabel_epaisseur_trait_jour)
-        self.slider_limite_haut_coef.valueChanged.connect(self.updateLabel_limite_haut_coef)
-        self.slider_limite_bas_coef.valueChanged.connect(self.updateLabel_limite_bas_coef)
-
-
-
-        self.print_button = QPushButton("Créer avec les mois sélectionnés")
-        self.print_button.clicked.connect(self.print_selected_months)
-
-        self.layout.addWidget(self.port_selector)
-        self.layout.addWidget(self.year_selector)
-        self.layout.addWidget(self.month_list)
-
-     
+        self.initUI()
         
-
-#TODO il faut parametres pour personaliser un peu l'affichage. des optiopns (lune, saint, jsp), la police et la taile des éléments. 
-#que tout soit personalisable. les couleurs aussi éventuellement. c'est une grosse interface mais c'estr bien quand meme. 
-
-        self.image_layout = QVBoxLayout()
-        self.image_layout.addWidget(self.scroll_area)
-        self.comboBox.setFixedWidth(100)
+    def initUI(self):
+        self.setWindowTitle('Ports Selector')
+        self.setGeometry(100, 100, 300, 600)
         
-        self.comboBox.setFocusPolicy(Qt.NoFocus)
-        self.comboBox.setEnabled(False)
+        layout = QVBoxLayout()
 
+        # Create a grid layout for better control over widget placement
+        grid_layout = QGridLayout()
         
-        vbox = QVBoxLayout()
-        vbox.addWidget(self.label_hauteur_jour)
-        vbox.addWidget(self.slider_hauteur_jour)
-        vbox2 = QVBoxLayout()
-        vbox2.addWidget(self.label_epaisseur_trait_jour)
-        vbox2.addWidget(self.slider_epaisseur_trait_jour)
-        vbox3 = QVBoxLayout()
-        vbox3.addWidget(self.label_limite_haut_coef)
-        vbox3.addWidget(self.slider_limite_haut_coef)
-        vbox4 = QVBoxLayout()
-        vbox4.addWidget(self.label_limite_bas_coef)
-        vbox4.addWidget(self.slider_limite_bas_coef)
-        hbox = QHBoxLayout()
-        hbox.addWidget(self.comboBox)
-        hbox.addLayout(vbox)
-        hbox.addLayout(vbox2)
-        hbox.addLayout(vbox3)
-        hbox.addLayout(vbox4)
+        # Create QListWidget for ports
+        self.portListWidget = QListWidget()
+        self.portListWidget.setSelectionMode(QListWidget.MultiSelection)
+        
+        # Load items from file
+        with open('ports.txt', 'r') as file:
+            ports = file.readlines()
+            for port in ports:
+                self.portListWidget.addItem(port.strip())
+        
+        # Create QListWidget for months
+        self.monthListWidget = QListWidget()
+        self.monthListWidget.setSelectionMode(QListWidget.MultiSelection)
+        
+        self.fondListWidget = QListWidget()
+        self.fondListWidget.setSelectionMode(QListWidget.MultiSelection)
+        
+        months = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
+        for month in months:
+            item = self.monthListWidget.addItem(month)
+            self.monthListWidget.item(self.monthListWidget.count()-1).setSelected(True)
+        
+        fonds = ["1", "2", "3", "4", "5", "6", "7"]
+        for f in fonds:
+            item = self.fondListWidget.addItem(str(f))
+            self.fondListWidget.item(self.fondListWidget.count()-1).setSelected(False)
+        
+        # Create ComboBox for year selection
+        self.yearComboBox = QComboBox()
+        self.yearComboBox.addItems([str(year) for year in [2025]])
+        
+        # Create ComboBox for resolution selection
+        self.resolutionComboBox = QComboBox()
+        self.resolutionComboBox.addItems(['50', '150', '400', '600'])
 
-        self.image_layout.addLayout(hbox)
+        # Create Create button
+        self.createButton = QPushButton('Create', self)
+        self.createButton.clicked.connect(self.onCreate)
+        
+        # Add widgets to the grid layout
+        grid_layout.addWidget(QLabel('Select Ports:'), 0, 0)
+        grid_layout.addWidget(self.portListWidget, 1, 0)
+        grid_layout.addWidget(QLabel('Select Months:'), 2, 0)
+        grid_layout.addWidget(self.monthListWidget, 3, 0)
+        grid_layout.addWidget(QLabel('Select Year:'), 4, 0)
+        grid_layout.addWidget(self.yearComboBox, 5, 0)
+        grid_layout.addWidget(QLabel('Select Backgrounds:'), 6, 0)
+        grid_layout.addWidget(self.fondListWidget, 7, 0)
+        grid_layout.addWidget(QLabel('Select Resolution:'), 8, 0)
+        grid_layout.addWidget(self.resolutionComboBox, 9, 0)
+        grid_layout.addWidget(self.createButton, 10, 0)
+        
+        layout.addLayout(grid_layout)
+        self.setLayout(layout)
+        
+    def onCreate(self):
+        selected_ports = [item.text() for item in self.portListWidget.selectedItems()]
+        selected_months = [item.text() for item in self.monthListWidget.selectedItems()]
+        selected_year = self.yearComboBox.currentText()
+        selected_resolution = self.resolutionComboBox.currentText()
+        selected_fond = [item.text() for item in self.fondListWidget.selectedItems()]
+        
+        for p in selected_ports:
+                fonctions.creation_image_complete(selected_year, selected_months, p, int(selected_resolution), selected_fond, p+"_"+selected_year+".png")
 
-        self.setLayout(self.image_layout)
-
-        self.image_layout.addWidget(self.preview_button)
-        self.image_layout.addWidget(self.print_button)
-
-        self.layout.addLayout(self.image_layout)
-    
-#TODO y'a des bugs ca se superpose je sais pas pouruqoi c'est bizarre, du a l'interface ? jsp. il est tard.
-    def preview(self):
-        selected_months = [[self.month_list.item(i).text() for i in range(self.month_list.count()) if self.month_list.item(i).isSelected()][0]]
-        selected_port = self.port_selector.currentItem().text()
-
-        print(f"Mois sélectionnés : {selected_months}")
-        print(f"Port : {selected_port}")
-        hauteur_jour = self.slider_hauteur_jour.value()/10.0
-        epaisseur_trait_jour = self.slider_epaisseur_trait_jour.value()/10.0
-        limite_haut_coef = self.slider_limite_haut_coef.value()
-        limite_bas_coef = self.slider_limite_bas_coef.value()
-
-        fonctions.creation_via_interface(selected_months, selected_port, 60, 1, hauteur_jour, epaisseur_trait_jour, limite_haut_coef, limite_bas_coef)
-        self.refresh_image()
-
-    def updateLabel_hauteur_jour(self):
-            value = self.slider_hauteur_jour.value()/10.0  # Convertit la valeur de l'intervalle [-100, 100] en [-10.0, 10.0]
-            self.label_hauteur_jour.setText('hauteur jours : {:.1f}'.format(value))
-    
-    def updateLabel_epaisseur_trait_jour(self):
-            value = self.slider_epaisseur_trait_jour.value() / 10.0  # Convertit la valeur de l'intervalle [-100, 100] en [-10.0, 10.0]
-            self.label_epaisseur_trait_jour.setText('epaisseur trait jours : {:.1f}'.format(value))
-
-    def updateLabel_limite_haut_coef(self):
-            value = self.slider_limite_haut_coef.value()  # Convertit la valeur de l'intervalle [-100, 100] en [-10.0, 10.0]
-            self.label_limite_haut_coef.setText('limite haut coef : {:.1f}'.format(value))
-    
-    def updateLabel_limite_bas_coef(self):
-            value = self.slider_limite_bas_coef.value()  # Convertit la valeur de l'intervalle [-100, 100] en [-10.0, 10.0]
-            self.label_limite_bas_coef.setText('limite bas coef : {:.1f}'.format(value))
-
-
-    def print_selected_months(self):
-        #TODO il faut aussi envoyer l'année.
-        selected_months = [self.month_list.item(i).text() for i in range(self.month_list.count()) if self.month_list.item(i).isSelected()]
-        selected_port = self.port_selector.currentItem().text()
-        fonctions.creation_image_complete(selected_months, selected_port, 200, 1)
-
-    def on_month_selection_changed(self):
-        #change mouse cursor to waiting cursor and change the color of the cursor
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-
-        selected_months = [self.month_list.item(i).text() for i in range(self.month_list.count()) if self.month_list.item(i).isSelected()]
-        print(f"Mois sélectionnés : {selected_months}")
-
-        for i in range(self.month_list.count()):
-            item = self.month_list.item(i)
-            item_name = self.month_list.item(i).text()
-            year = self.year_selector.currentItem().text()
-            port = self.port_selector.currentItem().text()
-            url = f"https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees/{port}/{item_name}-{year}"
-            print (url)
-            """
-            try:
-                response = requests.head(url)
-                #TODO améliorer la vérification des pages web existantes ou non. là ca marche pas pour les années suivantes puisque la page existe souvent mais n'est pas remplie. il faudrait tester si la page est remplie.
-                if response.status_code == 200:
-                    print("ok")
-                    item.setForeground(QColor("green"))
-                else:
-                    print("not ok")
-                    item.setForeground(QColor("red"))
-            except:
-                print("error")
-                item.setForeground(QColor("red"))
-            """
-        QApplication.restoreOverrideCursor()
-
-    def refresh_image(self):
-        # Charger une image (remplacez le chemin par votre propre chemin d'image)
-        image_path = "image_fusionnee.png"
-        pixmap = QPixmap(image_path)
-        self.image_label.setPixmap(pixmap)
-        self.scroll_area.ensureWidgetVisible(self.image_label)
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
+    ex = PortsSelector()
+    ex.show()
     sys.exit(app.exec_())
-
-
-

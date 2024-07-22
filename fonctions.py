@@ -610,23 +610,23 @@ def creee_image_fond(height, width, type=1):
         image_blurred.save("colors.png")
 
     elif type == 3:
-        image = np.zeros((width, height, 3), dtype=np.uint8)
+        image = np.zeros((height, width, 3), dtype=np.uint8)
         image[:] = (173, 162, 131)
         cv2.imwrite('colors.png', image)
 
     elif type == 4:
-        image = np.zeros((width, height, 3), dtype=np.uint8)
+        image = np.zeros((height, width, 3), dtype=np.uint8)
         image[:] = (123, 176, 236)
         cv2.imwrite('colors.png', image)
 
     elif type == 5:
-        image = np.zeros((width, height, 3), dtype=np.uint8)
+        image = np.zeros((height, width, 3), dtype=np.uint8)
         image[:] = (151, 171, 159)
         cv2.imwrite('colors.png', image)
 
 
     elif type == 6:
-        image = np.zeros((width, height, 3), dtype=np.uint8)
+        image = np.zeros((height, width, 3), dtype=np.uint8)
         image[:] = (212, 196, 130)
         cv2.imwrite('colors.png', image)
 
@@ -681,7 +681,9 @@ def recuperation_et_sauvegarde_url(url, port, m, year):
 
 
 
-def creation_image_complete(mois, port, taille, fond, nom_sortie="image_fusionnee.png"):
+def creation_image_complete(année, mois, port, taille, fonds, nom_sortie="image_fusionnee.png"):
+    global year
+    year = année
     cree_dossier_images()
     global size_factor
     size_factor = taille
@@ -706,47 +708,48 @@ def creation_image_complete(mois, port, taille, fond, nom_sortie="image_fusionne
     hauteur, largeur, c = img.shape
 
     print("generate background")
-    creee_image_fond(hauteur, largeur, fond)
-    
-    print("combining images")
-    
+    for f in fonds :
+        creee_image_fond(hauteur, largeur, int(f))
+        
+        print("combining images")
+        
 
-    # Charger les images RGBA et RGB
-    image_rgba = cv2.imread('out.png', cv2.IMREAD_UNCHANGED)  # Assurez-vous que l'image RGBA est lue correctement (avec les 4 canaux)
-    image_rgb = cv2.imread('colors.png')
+        # Charger les images RGBA et RGB
+        image_rgba = cv2.imread('out.png', cv2.IMREAD_UNCHANGED)  # Assurez-vous que l'image RGBA est lue correctement (avec les 4 canaux)
+        image_rgb = cv2.imread('colors.png')
 
-    # Extraire les canaux RGBA
-    rgba_channels = cv2.split(image_rgba)
-    blue, green, red, alpha = rgba_channels
+        # Extraire les canaux RGBA
+        rgba_channels = cv2.split(image_rgba)
+        blue, green, red, alpha = rgba_channels
 
-    # Convertir le canal alpha en un facteur de dilution (valeur entre 0 et 1)
-    alpha_factor = alpha.astype(float) / 255.0
+        # Convertir le canal alpha en un facteur de dilution (valeur entre 0 et 1)
+        alpha_factor = alpha.astype(float) / 255.0
 
-    # Mettre à jour les canaux RGB en utilisant le canal alpha comme facteur de dilution
-    updated_red = (red * alpha_factor + image_rgb[:, :, 2] * (1 - alpha_factor)).astype(np.uint8)
-    updated_green = (green * alpha_factor + image_rgb[:, :, 1] * (1 - alpha_factor)).astype(np.uint8)
-    updated_blue = (blue * alpha_factor + image_rgb[:, :, 0] * (1 - alpha_factor)).astype(np.uint8)
+        # Mettre à jour les canaux RGB en utilisant le canal alpha comme facteur de dilution
+        updated_red = (red * alpha_factor + image_rgb[:, :, 2] * (1 - alpha_factor)).astype(np.uint8)
+        updated_green = (green * alpha_factor + image_rgb[:, :, 1] * (1 - alpha_factor)).astype(np.uint8)
+        updated_blue = (blue * alpha_factor + image_rgb[:, :, 0] * (1 - alpha_factor)).astype(np.uint8)
 
-    # Fusionner les canaux mis à jour en une seule image RGB
-    merged_image = cv2.merge([updated_blue, updated_green, updated_red])
+        # Fusionner les canaux mis à jour en une seule image RGB
+        merged_image = cv2.merge([updated_blue, updated_green, updated_red])
 
 
-    cv2.imwrite(nom_sortie, merged_image)
-    
-    print("FINITO")
+        cv2.imwrite(nom_sortie[:-4]+"_"+str(f)+nom_sortie[-4:], merged_image)
+        
+        print(nom_sortie, "  : FINITO")
 
 #TODO créer une image en tete avec l'année et le nom du port et peut etre d'autres choses je sais pas quoi
 #TODO ca serait bien d'avoir la lune aussi. 
 if __name__ == "__main__":
     year = "2025"
     mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
-    port = "le-verdon-sur-mer-1036"
-    creation_image_complete(mois, port, 60, 7, port+"_"+year+".png")
+    port = "ile-de-re-saint-martin-1026"
+    creation_image_complete(mois, port, 150, 7, port+"_"+year+".png")
     
-    texte = ""
-    if os.path.exists("ports.txt"):
-        with open("ports.txt", "r", encoding="utf-8") as fichier:
-            texte = fichier.read()
+    #texte = ""
+    #if os.path.exists("ports.txt"):
+    #    with open("ports.txt", "r", encoding="utf-8") as fichier:
+    #        texte = fichier.read()
     
     #for port in texte.split("\n"):
     #    creation_image_complete(mois, port, 20, 7, port+"_"+year+".png")
