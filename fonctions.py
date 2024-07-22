@@ -292,7 +292,7 @@ def draw(url, port, month, year, nom):
     ax.plot(minutes, hauteurs, color='black', linewidth=6)
 
 
-
+    # la ca écrit les hauteurs d'eau
     for x, y in zip(minutes, hauteurs):
         if y > moyenne_hauteur :
             ax.text(x, y+0.2, str(y)+"m", ha='center', va='bottom', fontproperties=font_hauteur, fontsize=15, color='black')
@@ -342,7 +342,7 @@ def draw(url, port, month, year, nom):
         if line_index <= 1:
             hauteur_to_update = operation(hauteurs[line_index+4], décalage_hauteur_petits_traits, updown)
         #ecrit l'heure de la marée
-        ax.text(x, operation(y, 0.6 if updown == 1 else 1.0, updown), h, ha='center', va='bottom', fontproperties=font_hauteur, fontsize=15, color='black', weight='bold')
+        ax.text(x, operation(y, 0.7 if updown == 1 else 1.2, updown), h, ha='center', va='bottom', fontproperties=font_hauteur, fontsize=15, color='black', weight='bold')
         jour = tab[line_index][0]
         if day != jour:
             pt1 = (x, hauteurs[line_index])
@@ -481,15 +481,30 @@ def combine_images (image1, image2):
     cv2.imwrite('image_superposee.png', overlay_with_alpha)
 
 def image_vide(nom):
-    """Crée une image vide en RGBA et l'enregistre sous le nom spécifié. utile pour espacer les images des bords haut et bas de l'image finale lors de l'assemblage
-    image pas large, p as besoin. image haute. le canal alpha est initialisé à 0 pour une transparence complète.
+    print(nom)
+    """Crée une image vide en RGBA et l'enregistre sous le nom spécifié.
 
     Args:
         nom (str): Nom du fichier de sortie.
+        size_factor (int): Facteur de taille pour l'image.
     """
-    image = np.zeros((2*size_factor, size_factor//10, 4), dtype=np.uint8)
+    # Vérifiez que le dossier IMAGES existe
+    if not os.path.exists("IMAGES"):
+        os.makedirs("IMAGES")
+    
+    # Créez l'image
+    image = np.zeros((2 * size_factor, size_factor // 10, 4), dtype=np.uint8)
     image[:, :, 3] = 0  # Canal alpha à 0 pour une transparence complète
-    cv2.imwrite("IMAGES/"+nom, image)
+    
+    # Vérifiez que l'image n'est pas vide
+    if image is None or image.size == 0:
+        raise ValueError("L'image est vide ou n'a pas été créée correctement")
+    
+    # Enregistrez l'image
+    success = cv2.imwrite("IMAGES/" + nom, image)
+    if not success:
+        raise IOError("Erreur lors de l'enregistrement de l'image")
+
 
 
 def header(texte, fond):
@@ -684,14 +699,14 @@ def recuperation_et_sauvegarde_url(url, port, m, year):
 def creation_image_complete(année, mois, port, taille, fonds, nom_sortie="image_fusionnee.png"):
     global year
     year = année
-    cree_dossier_images()
     global size_factor
     size_factor = taille
+    
+    
+    cree_dossier_images()
     create_moon_image()
-
     url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees"
     image_vide("0.png")
-
     header("CALENDRIER DES MARÉES "+year, True)
     header(port, False)
     image_vide("1.png")
@@ -743,8 +758,10 @@ def creation_image_complete(année, mois, port, taille, fonds, nom_sortie="image
 if __name__ == "__main__":
     year = "2025"
     mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
+    mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin"]
+
     port = "ile-de-re-saint-martin-1026"
-    creation_image_complete(mois, port, 150, 7, port+"_"+year+".png")
+    creation_image_complete(year, mois, port, 80, "4", port+"_"+year+".png")
     
     #texte = ""
     #if os.path.exists("ports.txt"):

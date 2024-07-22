@@ -1,6 +1,8 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QListWidget, QPushButton, QMessageBox, QComboBox, QLabel, QCheckBox, QGridLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QListWidget, QPushButton, QProgressBar, QMessageBox, QComboBox, QLabel, QCheckBox, QGridLayout
 import fonctions
+import os
+
 class PortsSelector(QWidget):
     def __init__(self):
         super().__init__()
@@ -54,6 +56,11 @@ class PortsSelector(QWidget):
         self.createButton = QPushButton('Create', self)
         self.createButton.clicked.connect(self.onCreate)
         
+        # Create Progress Bar
+        self.progressBar = QProgressBar(self)
+        self.progressBar.setValue(0)
+        self.progressBar.setTextVisible(False)
+        
         # Add widgets to the grid layout
         grid_layout.addWidget(QLabel('Select Ports:'), 0, 0)
         grid_layout.addWidget(self.portListWidget, 1, 0)
@@ -66,19 +73,30 @@ class PortsSelector(QWidget):
         grid_layout.addWidget(QLabel('Select Resolution:'), 8, 0)
         grid_layout.addWidget(self.resolutionComboBox, 9, 0)
         grid_layout.addWidget(self.createButton, 10, 0)
+        grid_layout.addWidget(self.progressBar, 11, 0)
         
         layout.addLayout(grid_layout)
         self.setLayout(layout)
         
+
+    def update_progress(self):
+        folder_path = 'IMAGES'
+        file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
+        self.progress.setMaximum(file_count)
+        self.progress.setValue(file_count)
+
     def onCreate(self):
         selected_ports = [item.text() for item in self.portListWidget.selectedItems()]
         selected_months = [item.text() for item in self.monthListWidget.selectedItems()]
         selected_year = self.yearComboBox.currentText()
         selected_resolution = self.resolutionComboBox.currentText()
         selected_fond = [item.text() for item in self.fondListWidget.selectedItems()]
+
+        self.progressBar.setMaximum(14)
         
-        for p in selected_ports:
-                fonctions.creation_image_complete(selected_year, selected_months, p, int(selected_resolution), selected_fond, p+"_"+selected_year+".png")
+        for index, port in enumerate(selected_ports):
+            fonctions.creation_image_complete(selected_year, selected_months, port, int(selected_resolution), selected_fond, port + "_" + selected_year + ".png")
+            self.progressBar.setValue(index + 1)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
