@@ -743,10 +743,8 @@ def creation_image_complete(année, mois, port, taille, fonds, nom_sortie="image
     print("generate background")
     for f in fonds :
         creee_image_fond(hauteur, largeur, int(f))
-        
         print("combining images")
         
-
         # Charger les images RGBA et RGB
         image_rgba = cv2.imread('out.png', cv2.IMREAD_UNCHANGED)  # Assurez-vous que l'image RGBA est lue correctement (avec les 4 canaux)
         image_rgb = cv2.imread('colors.png')
@@ -767,7 +765,9 @@ def creation_image_complete(année, mois, port, taille, fonds, nom_sortie="image
         merged_image = cv2.merge([updated_blue, updated_green, updated_red])
 
 
-        cv2.imwrite(nom_sortie[:-4]+"_"+str(f)+nom_sortie[-4:], merged_image)
+        output_folder = "OUTPUT IMAGES"
+        os.makedirs(output_folder, exist_ok=True)
+        cv2.imwrite(os.path.join(output_folder, nom_sortie[:-4]+"_"+str(f)+nom_sortie[-4:]), merged_image)
         
         print(nom_sortie, "  : FINITO")
 
