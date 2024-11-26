@@ -566,6 +566,7 @@ def creee_image_fond(height, width, type=1):
                                     5 = kaki plein
                                     6 = bleu vif plein
                                     7 = bandes bleu orange kaki
+                                    8 = rayé vif
 
     Returns:
         image (numpy.ndarray): Image de fond 
@@ -659,6 +660,23 @@ def creee_image_fond(height, width, type=1):
         image[hauteur1:hauteur2] = middle_color
         image[hauteur2:] = bottom_color
         cv2.imwrite('colors.png', image)
+
+    elif type == 8:
+        ratio = 76.45  # pixels to size_factor ratio
+        top_color = (167, 176, 118)       # Conversion de (118, 176, 167)
+        middle_color = (142, 141, 241)    # Conversion de (241, 141, 142)
+        bottom_color = (99, 164, 244)     # Conversion de (244, 164, 99)
+
+        hauteur1 = int(height/2.567)
+        hauteur2 =int(2.009*height/3)
+
+        image = np.zeros((height, width, 3), dtype=np.uint8)
+
+        image[:hauteur1] = top_color
+        image[hauteur1:hauteur2] = middle_color
+        image[hauteur2:] = bottom_color
+        cv2.imwrite('colors.png', image)
+    
 
 
 
