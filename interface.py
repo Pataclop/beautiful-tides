@@ -39,7 +39,7 @@ class PortsSelector(QWidget):
             item = self.monthListWidget.addItem(month)
             self.monthListWidget.item(self.monthListWidget.count()-1).setSelected(True)
         
-        fonds = ["1", "2", "3", "4", "5", "6", "7"]
+        fonds = ["zigzag vague", "bleu flou bulles", "bleu-gris plein", "orange plein", "kaki plein", "bleu vif plein", "bandes bleu orange kaki", "bandes vif"]
         for f in fonds:
             item = self.fondListWidget.addItem(str(f))
             self.fondListWidget.item(self.fondListWidget.count()-1).setSelected(False)
@@ -90,7 +90,7 @@ class PortsSelector(QWidget):
         selected_months = [item.text() for item in self.monthListWidget.selectedItems()]
         selected_year = self.yearComboBox.currentText()
         selected_resolution = self.resolutionComboBox.currentText()
-        selected_fond = [item.text() for item in self.fondListWidget.selectedItems()]
+        selected_fond = [self.fondListWidget.row(item) + 1 for item in self.fondListWidget.selectedItems()]
 
         self.progressBar.setMaximum(14)
         
