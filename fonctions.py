@@ -26,7 +26,8 @@ fancy_font = "fonts/AmaticSC-Bold.ttf"
 regular_font = "Arial"
 minutes_dans_journée = 1440
 semaine = ["lu", "ma", "me", "je", "ve", "sa", "di"]
-dossier_images = "IMAGES"
+dossier_images = "processing_images"
+dossier_ressources = "ressources"
 size_factor = 0
 marge_pointillets = 40
 hauteur_jour = 1.9
@@ -46,6 +47,9 @@ def cree_dossier_images():
     if os.path.exists(dossier_images):
         shutil.rmtree(dossier_images)
     os.mkdir(dossier_images)
+    if os.path.exists(dossier_ressources):
+        shutil.rmtree(dossier_ressources)
+    os.mkdir(dossier_ressources)
 
 def aligne_basse(chaine):
     # Créer un modèle de regex pour trouver "Maree basse" suivie de la prochaine lettre "M" ou "L"
@@ -174,7 +178,7 @@ def stack_images_in_order(input_folder, output_filename):
         stacked_image[current_y:current_y + h, x_offset:x_offset + w] = image
         current_y += h
 
-    cv2.imwrite(output_filename, stacked_image)
+    cv2.imwrite("ressources/" + output_filename, stacked_image)
 
 def nettoyage_page_web(text):
     t = clean(text)
@@ -301,19 +305,20 @@ def draw(url, port, month, year, nom):
     line_index = 0
     current_day = "t"
     previous_day = "r"
-    angle = 0
     hauteur_précédente =  0.0
     hauteur_précédente_2 = 0.0
 
     
-
     #TODO il y a un bug occasionnel, je ne sais pas pourquoi, mais pour les pointillets en trait, pour le dernier jour (peut etre pour le premier aussi), 
     #pour le dernier segment complet, le début du segment ne va âs etre raccord avec celui du jour précédent. il y a une marche. il doit y avoir un bug de hauteur précédente ou hauteur précedente 2
+    #Des fois aussi, la pente des traits est trop forte et le texte fait moche parce que trop proche.
+    
+
     décalage_hauteur_petits_traits = 1.45
 
     def insere_lune(x, y, phase):
         image_path = phase+'.png'
-        img = mpimg.imread(image_path)
+        img = mpimg.imread("ressources/"+image_path)
         # Spécifiez la position de l'image (en coordonnées de données)
         x_position = x
         y_position = y
@@ -370,16 +375,12 @@ def draw(url, port, month, year, nom):
             plot_line_with_dashes(x_points, y_points)
         return jour, hauteur_to_update
 
-
     for x, y, h in zip(minutes, hauteurs, heures):
-
-
         if y > moyenne_hauteur :
             current_day, hauteur_précédente = draw_stuff(hauteur_précédente, 1, current_day)
         else :
             previous_day, hauteur_précédente_2 = draw_stuff(hauteur_précédente_2, -1, previous_day)
         line_index = line_index+1
-
 
     last_coef = 0
     for i in range(5):
@@ -426,8 +427,7 @@ def draw(url, port, month, year, nom):
     padded_image[:, int(0.75*height):] = image
     cv2.imwrite(nom, padded_image)
     #et on écrit le mois
-    write_text_on_image(nom, nom[7:-9], 30, (size_factor, size_factor//3), fancy_font, int(size_factor*1.25))
-
+    write_text_on_image(nom, nom[18:-9], 30, (size_factor, size_factor//3), fancy_font, int(size_factor*1.25))
 
 
 def create_moon_image():
@@ -451,13 +451,8 @@ def create_moon_image():
             draw.ellipse((center - radius, center - radius, center + radius, center + radius), fill='white', outline='black', width=w)
             draw.rectangle((0, 0, center, size), fill=(0, 0, 0, 0))
             draw.line((center, 0, center, size), width=w, fill='black')
-        image.save(phase+ '.png')
-
-
-        
-     
+        image.save("ressources/" + phase+ '.png')
         return image
-     
     phases = ['PL_LUNE', 'NV_LUNE', 'PR_QRT', 'DR_QRT']
     for phase in phases:
         draw_images(phase)
@@ -488,9 +483,7 @@ def image_vide(nom):
         nom (str): Nom du fichier de sortie.
         size_factor (int): Facteur de taille pour l'image.
     """
-    # Vérifiez que le dossier IMAGES existe
-    if not os.path.exists("IMAGES"):
-        os.makedirs("IMAGES")
+
     
     # Créez l'image
     image = np.zeros((2 * size_factor, size_factor // 10, 4), dtype=np.uint8)
@@ -501,7 +494,7 @@ def image_vide(nom):
         raise ValueError("L'image est vide ou n'a pas été créée correctement")
     
     # Enregistrez l'image
-    success = cv2.imwrite("IMAGES/" + nom, image)
+    success = cv2.imwrite(dossier_images + "/" + nom, image)
     if not success:
         raise IOError("Erreur lors de l'enregistrement de l'image")
 
@@ -532,7 +525,7 @@ def header(texte, fond):
     hauteur_texte = bbox[3] - bbox[1]
     position = ((largeur - largeur_texte) // 2, (hauteur - hauteur_texte) * 0.5 // 2)
     draw.text(position, texte, couleur_texte, font=police)
-    image.save('IMAGES/' + nom)
+    image.save('processing_images/' + nom)
  
 def stack_images(image1_path, image2_path, output_path):
     # Ouvrir les images avec Pillow
@@ -608,7 +601,7 @@ def creee_image_fond(height, width, type=1):
         # Convertir l'image en type np.uint8
         image = (image * 255).astype(np.uint8)
 
-        cv2.imwrite("colors.png", image)
+        cv2.imwrite("ressources/" + "colors.png", image)
 
     elif type == 2:
         image = Image.new("RGB", (width, height), "white")
@@ -623,28 +616,28 @@ def creee_image_fond(height, width, type=1):
             couleur = (110, 120, couleur_bleu)
             draw.ellipse([x - rayon, y - rayon, x + rayon, y + rayon], fill=couleur)
         image_blurred = image.filter(ImageFilter.GaussianBlur(radius=width//80))
-        image_blurred.save("colors.png")
+        image_blurred.save("ressources/" + "colors.png")
 
     elif type == 3:
         image = np.zeros((height, width, 3), dtype=np.uint8)
         image[:] = (173, 162, 131)
-        cv2.imwrite('colors.png', image)
+        cv2.imwrite("ressources/" + 'colors.png', image)
 
     elif type == 4:
         image = np.zeros((height, width, 3), dtype=np.uint8)
         image[:] = (123, 176, 236)
-        cv2.imwrite('colors.png', image)
+        cv2.imwrite("ressources/" + 'colors.png', image)
 
     elif type == 5:
         image = np.zeros((height, width, 3), dtype=np.uint8)
         image[:] = (151, 171, 159)
-        cv2.imwrite('colors.png', image)
+        cv2.imwrite("ressources/" + 'colors.png', image)
 
 
     elif type == 6:
         image = np.zeros((height, width, 3), dtype=np.uint8)
         image[:] = (212, 196, 130)
-        cv2.imwrite('colors.png', image)
+        cv2.imwrite("ressources/" + 'colors.png', image)
 
     elif type == 7:
         ratio = 76.45  # pixels to size_factor ratio
@@ -659,7 +652,7 @@ def creee_image_fond(height, width, type=1):
         image[:hauteur1] = top_color
         image[hauteur1:hauteur2] = middle_color
         image[hauteur2:] = bottom_color
-        cv2.imwrite('colors.png', image)
+        cv2.imwrite("ressources/" + 'colors.png', image)
 
     elif type == 8:
         ratio = 76.45  # pixels to size_factor ratio
@@ -675,10 +668,8 @@ def creee_image_fond(height, width, type=1):
         image[:hauteur1] = top_color
         image[hauteur1:hauteur2] = middle_color
         image[hauteur2:] = bottom_color
-        cv2.imwrite('colors.png', image)
+        cv2.imwrite("ressources/" + 'colors.png', image)
     
-
-
 
 def recuperation_et_sauvegarde_url(url, port, m, year):
 
@@ -719,8 +710,6 @@ def creation_image_complete(année, mois, port, taille, fonds, nom_sortie="image
     year = année
     global size_factor
     size_factor = taille
-    
-    
     cree_dossier_images()
     create_moon_image()
     url = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees"
@@ -730,14 +719,14 @@ def creation_image_complete(année, mois, port, taille, fonds, nom_sortie="image
     image_vide("1.png")
     for m in mois :
         print(m+" "+year)
-        draw(url, port, m, year,"IMAGES/"+m+"-"+year+".png")
+        draw(url, port, m, year,dossier_images+"/"+m+"-"+year+".png")
 
     image_vide("2.png")
     image_vide("3.png")
 
-    stack_images_in_order("IMAGES", "out.png")
+    stack_images_in_order(dossier_images, "out.png")
 
-    img = cv2.imread("out.png")
+    img = cv2.imread("ressources/out.png")
     hauteur, largeur, c = img.shape
 
     print("generate background")
@@ -746,8 +735,8 @@ def creation_image_complete(année, mois, port, taille, fonds, nom_sortie="image
         print("combining images")
         
         # Charger les images RGBA et RGB
-        image_rgba = cv2.imread('out.png', cv2.IMREAD_UNCHANGED)  # Assurez-vous que l'image RGBA est lue correctement (avec les 4 canaux)
-        image_rgb = cv2.imread('colors.png')
+        image_rgba = cv2.imread("ressources/out.png", cv2.IMREAD_UNCHANGED)  # Assurez-vous que l'image RGBA est lue correctement (avec les 4 canaux)
+        image_rgb = cv2.imread("ressources/" + 'colors.png')
 
         # Extraire les canaux RGBA
         rgba_channels = cv2.split(image_rgba)
@@ -776,16 +765,6 @@ def creation_image_complete(année, mois, port, taille, fonds, nom_sortie="image
 if __name__ == "__main__":
     year = "2025"
     mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
-    mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin"]
-
     port = "ile-de-re-saint-martin-1026"
     creation_image_complete(year, mois, port, 80, "4", port+"_"+year+".png")
-    
-    #texte = ""
-    #if os.path.exists("ports.txt"):
-    #    with open("ports.txt", "r", encoding="utf-8") as fichier:
-    #        texte = fichier.read()
-    
-    #for port in texte.split("\n"):
-    #    creation_image_complete(mois, port, 20, 7, port+"_"+year+".png")
 
