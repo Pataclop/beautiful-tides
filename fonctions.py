@@ -17,9 +17,11 @@ import shutil
 Image.MAX_IMAGE_PIXELS = None
 
 font_path = 'fonts/FUTURANEXTDEMIBOLDITALIC.TTF'  # Assurez-vous que le chemin est correct
-font_path2 = 'fonts/FUTURANEXTLIGHT.TTF'
+font_path2 = 'fonts/SAIL.ttf'
+font_path3 = 'fonts/SAIL_BOLD.ttf'
 header_font = "fonts/octin stencil rg.otf"
 font_hauteur = FontProperties(fname=font_path2)
+font_hauteur_bold = FontProperties(fname=font_path3)
 jours_font = FontProperties(fname=font_path)
 NB_MAREE = 124
 fancy_font = "fonts/AmaticSC-Bold.ttf"
@@ -300,9 +302,9 @@ def draw(url, port, month, year, nom):
     # la ca écrit les hauteurs d'eau
     for x, y in zip(minutes, hauteurs):
         if y > moyenne_hauteur :
-            ax.text(x, y+0.2, str(y)+"m", ha='center', va='bottom', fontproperties=font_hauteur, fontsize=15, color='black')
+            ax.text(x, y+0.2, str(y)+"m", ha='center', va='bottom', fontproperties=font_hauteur, fontsize=15, color='white')
         else :
-            ax.text(x, y-0.2, str(y)+"m", ha='center', va='top', fontproperties=font_hauteur, fontsize=15, color='black')
+            ax.text(x, y-0.2, str(y)+"m", ha='center', va='top', fontproperties=font_hauteur, fontsize=15, color='white')
     line_index = 0
     current_day = "t"
     previous_day = "r"
@@ -347,7 +349,7 @@ def draw(url, port, month, year, nom):
        if line_index <= 1:
            hauteur_to_update = operation(hauteurs[line_index+4], décalage_hauteur_petits_traits, updown)
        #ecrit l'heure de la marée
-       ax.text(x, operation(y, 0.7 if updown == 1 else 1.2, updown), h, ha='center', va='bottom', fontproperties=font_hauteur, fontsize=15, color='black', weight='bold')
+       ax.text(x, operation(y, 0.7 if updown == 1 else 1.2, updown), h, ha='center', va='bottom', fontproperties=font_hauteur_bold, fontsize=15, color='white', weight='bold')
        jour = tab[line_index][0]
        if day != jour:
            pt1 = (x, hauteurs[line_index])
@@ -440,11 +442,12 @@ def draw(url, port, month, year, nom):
     plt.close()
 
     #ici on élargit l'image (on rajoute une zone a gauche) pour avoir la place plus tard d'écrire le mois
+    space_factor = 0.7
     image = cv2.imread(nom, cv2.IMREAD_UNCHANGED)
     height, width, _ = image.shape
-    padded_image = np.zeros((height, (width+int(0.75*height)), 4), dtype=np.uint8)
+    padded_image = np.zeros((height, (width+int(space_factor*height)), 4), dtype=np.uint8)
     # Copier l'image d'entrée à droite avec un espace vide à gauche
-    padded_image[:, int(0.75*height):] = image
+    padded_image[:, int(space_factor*height):] = image
     cv2.imwrite(nom, padded_image)
     #et on écrit le mois
     write_text_on_image(nom, nom[18:-9], 30, (size_factor, size_factor//3), fancy_font, int(size_factor*1.25))
@@ -518,6 +521,30 @@ def image_vide(nom):
     if not success:
         raise IOError("Erreur lors de l'enregistrement de l'image")
 
+def inter_images_vide(nom):
+    print(nom)
+    """Crée une image vide en RGBA et l'enregistre sous le nom spécifié.
+
+    Args:
+        nom (str): Nom du fichier de sortie.
+        size_factor (int): Facteur de taille pour l'image.
+    """
+
+    
+    # Créez l'image
+    hauteur = 1.51 * size_factor
+    largeur = size_factor // 10
+    image = np.zeros((int(hauteur), largeur, 4), dtype=np.uint8)
+    image[:, :, 3] = 0  # Canal alpha à 0 pour une transparence complète
+    
+    # Vérifiez que l'image n'est pas vide
+    if image is None or image.size == 0:
+        raise ValueError("L'image est vide ou n'a pas été créée correctement")
+    
+    # Enregistrez l'image
+    success = cv2.imwrite(dossier_images + "/" + nom, image)
+    if not success:
+        raise IOError("Erreur lors de l'enregistrement de l'image")
 
 
 def header(texte, fond):
@@ -740,6 +767,10 @@ def creation_image_complete(année, mois, port, taille, fonds, nom_sortie="image
     for m in mois :
         print(m+" "+year)
         draw(url, port, m, year,dossier_images+"/"+m+"-"+year+".png")
+        inter_images_vide(str(m+"-"+year)+"toto.png")
+
+        
+
 
     image_vide("2.png")
     image_vide("3.png")
@@ -786,5 +817,5 @@ if __name__ == "__main__":
     year = "2025"
     mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
     port = "ile-de-re-saint-martin-1026"
-    creation_image_complete(year, mois, port, 80, "4", port+"_"+year+".png")
+    creation_image_complete(year, mois, port, 50, "4", port+"_"+year+".png")
 
