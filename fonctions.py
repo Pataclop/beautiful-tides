@@ -31,6 +31,7 @@ dossier_ressources = "ressources"
 size_factor = 0
 marge_pointillets = 40
 hauteur_jour = 1.9
+hauteur_jour2 = 2.0
 epaisseur_trait_jour = 1.0
 limite_haut_coef = 95
 limite_bas_coef = 35
@@ -333,47 +334,66 @@ def draw(url, port, month, year, nom):
         return a-b
 
     def draw_stuff(hauteur_to_update, updown, day):
-        """
-        Draws text and lines on a plot based on the given parameters.
+       """
+       Draws text and lines on a plot based on the given parameters.
 
-        Args:
-            hauteur_to_update (float): The height value to update.
-            updown (int): 1 = marée haute, -1 = maree basse.
-            day (str): The current day.
+       Args:
+           hauteur_to_update (float): The height value to update.
+           updown (int): 1 = marée haute, -1 = maree basse.
+           day (str): The current day.
+       Returns:
+           tuple: A tuple containing the current day and the updated height value.
+       """
+       if line_index <= 1:
+           hauteur_to_update = operation(hauteurs[line_index+4], décalage_hauteur_petits_traits, updown)
+       #ecrit l'heure de la marée
+       ax.text(x, operation(y, 0.7 if updown == 1 else 1.2, updown), h, ha='center', va='bottom', fontproperties=font_hauteur, fontsize=15, color='black', weight='bold')
+       jour = tab[line_index][0]
+       if day != jour:
+           pt1 = (x, hauteurs[line_index])
+           pt2 = (0,0)
+           if line_index+4<len(minutes):
+               pt2 = (minutes[line_index+4], hauteurs[line_index+4])
+           # elif line_index<len(minutes):
+           #     pt2 = (minutes[line_index], hauteurs[line_index+2])
+           else:
+               pt2 = (minutes[line_index], hauteurs[line_index])
+           angle = calculer_angle_entre_points(pt1, pt2)
+           jour_to_write, date_to_write =  tab[line_index][0].split(" ")
+           nom_jour = jour_to_write[0].upper()+date_to_write
+           #ecrit le nom du jour
 
-        Returns:
-            tuple: A tuple containing the current day and the updated height value.
-        """
-        if line_index <= 1:
-            hauteur_to_update = operation(hauteurs[line_index+4], décalage_hauteur_petits_traits, updown)
-        #ecrit l'heure de la marée
-        ax.text(x, operation(y, 0.7 if updown == 1 else 1.2, updown), h, ha='center', va='bottom', fontproperties=font_hauteur, fontsize=15, color='black', weight='bold')
-        jour = tab[line_index][0]
-        if day != jour:
-            pt1 = (x, hauteurs[line_index])
-            pt2 = (0,0)
-            if line_index+4<len(minutes):
-                pt2 = (minutes[line_index+4], hauteurs[line_index+4])
-            else:
-                pt2 = (minutes[line_index], hauteurs[line_index])
-            angle = calculer_angle_entre_points(pt1, pt2)
-            jour_to_write, date_to_write =  tab[line_index][0].split(" ")
-            nom_jour = jour_to_write[0].upper()+date_to_write
-            #ecrit le nom du jour
-            ax.text((0.28+minutes[line_index]//minutes_dans_journée)*minutes_dans_journée, operation(y, hauteur_jour if updown == 1 else hauteur_jour, updown), nom_jour, fontproperties=jours_font, rotation=angle*650, ha='center', va='center', color='black', fontsize=23)
-            x_points = [minutes[line_index]//minutes_dans_journée*minutes_dans_journée, ((minutes[line_index]//minutes_dans_journée)+1)*minutes_dans_journée]
-            if updown<0:
-                if x_points[1] == 0.0:
-                    x_points[1] = x_points[0]
-            if line_index+4<len(hauteurs):
-                y_points = [operation(hauteurs[line_index],décalage_hauteur_petits_traits, updown), operation(hauteurs[line_index+4], décalage_hauteur_petits_traits, updown)]
-                if line_index>1:
-                    y_points = [hauteur_to_update, operation(hauteurs[line_index+4],décalage_hauteur_petits_traits, updown)]
-                    hauteur_to_update = operation(hauteurs[line_index+4],décalage_hauteur_petits_traits, updown)
-            else:
-                y_points = [operation(hauteurs[line_index],décalage_hauteur_petits_traits, updown), operation(hauteurs[line_index],décalage_hauteur_petits_traits, updown)]
-            plot_line_with_dashes(x_points, y_points)
-        return jour, hauteur_to_update
+           if line_index+2 < len(hauteurs):
+               if updown:
+                   ax.text((0.28+minutes[line_index]//minutes_dans_journée)*minutes_dans_journée, operation(max(hauteurs[line_index+2], hauteurs[line_index]), hauteur_jour if updown == 1 else hauteur_jour2, updown), nom_jour, fontproperties=jours_font, rotation=angle*650,
+ ha='center', va='center', color='black', fontsize=23)
+               else:
+                   ax.text((0.28+minutes[line_index]//minutes_dans_journée)*minutes_dans_journée, operation(min(hauteurs[line_index+2], hauteurs[line_index]), hauteur_jour if updown == 1 else hauteur_jour2, updown), nom_jour, fontproperties=jours_font, rotation=angle*650,
+ ha='center', va='center', color='black', fontsize=23)
+           else:
+               ax.text((0.28+minutes[line_index]//minutes_dans_journée)*minutes_dans_journée, operation(hauteurs[line_index], hauteur_jour if updown == 1 else hauteur_jour2, updown), nom_jour, fontproperties=jours_font, rotation=angle*650, ha='center', va='center',
+ color='black', fontsize=23)
+           x_points = [minutes[line_index]//minutes_dans_journée*minutes_dans_journée, ((minutes[line_index]//minutes_dans_journée)+1)*minutes_dans_journée]
+           if updown<0:
+               if x_points[1] == 0.0:
+                   x_points[1] = x_points[0]
+           if line_index+4<len(hauteurs):
+               y_points = [operation(hauteurs[line_index],décalage_hauteur_petits_traits, updown), operation(hauteurs[line_index+4], décalage_hauteur_petits_traits, updown)]
+               if line_index>1:
+                   y_points = [hauteur_to_update, operation(hauteurs[line_index+4],décalage_hauteur_petits_traits, updown)]
+                   hauteur_to_update = operation(hauteurs[line_index+4],décalage_hauteur_petits_traits, updown)
+           elif line_index+2<len(hauteurs):
+               y_points = [operation(hauteurs[line_index],décalage_hauteur_petits_traits, updown), operation(hauteurs[line_index+2],décalage_hauteur_petits_traits, updown)]
+               if line_index>1:
+                   y_points = [hauteur_to_update, operation(hauteurs[line_index+2],décalage_hauteur_petits_traits, updown)]
+                   hauteur_to_update = operation(hauteurs[line_index+2],décalage_hauteur_petits_traits, updown)
+           else:
+               y_points = [operation(hauteurs[line_index],décalage_hauteur_petits_traits, updown), operation(hauteurs[line_index],décalage_hauteur_petits_traits, updown)]
+               if line_index>1:
+                   y_points = [hauteur_to_update, operation(hauteurs[line_index],décalage_hauteur_petits_traits, updown)]
+                   hauteur_to_update = operation(hauteurs[line_index],décalage_hauteur_petits_traits, updown)
+           plot_line_with_dashes(x_points, y_points)
+       return jour, hauteur_to_update
 
     for x, y, h in zip(minutes, hauteurs, heures):
         if y > moyenne_hauteur :
