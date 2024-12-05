@@ -521,18 +521,25 @@ def image_vide(nom):
     if not success:
         raise IOError("Erreur lors de l'enregistrement de l'image")
 
-def inter_images_vide(nom):
+def inter_images_vide(nom, ratio):
     print(nom)
     """Crée une image vide en RGBA et l'enregistre sous le nom spécifié.
 
     Args:
         nom (str): Nom du fichier de sortie.
         size_factor (int): Facteur de taille pour l'image.
+
+        ratio (float): ratio pour photobox. 
+
+        
     """
+
+    if ratio == 70.100 :
+        ratio = 1.51
 
     
     # Créez l'image
-    hauteur = 1.51 * size_factor
+    hauteur = ratio * size_factor
     largeur = size_factor // 10
     image = np.zeros((int(hauteur), largeur, 4), dtype=np.uint8)
     image[:, :, 3] = 0  # Canal alpha à 0 pour une transparence complète
@@ -691,8 +698,8 @@ def creee_image_fond(height, width, type=1):
         top_color = (173, 162, 131)
         middle_color = (123, 176, 236)
         bottom_color = (151, 171, 159)
-        hauteur1 = int(height/2.567)
-        hauteur2 =int(2.009*height/3)
+        hauteur1 = int(height/2.71)
+        hauteur2 =int(1.99*height/3)
 
         image = np.zeros((height, width, 3), dtype=np.uint8)
 
@@ -767,7 +774,7 @@ def creation_image_complete(année, mois, port, taille, fonds, nom_sortie="image
     for m in mois :
         print(m+" "+year)
         draw(url, port, m, year,dossier_images+"/"+m+"-"+year+".png")
-        inter_images_vide(str(m+"-"+year)+"toto.png")
+        inter_images_vide(str(m+"-"+year)+"toto.png", 70.1)
 
         
 
@@ -816,6 +823,7 @@ def creation_image_complete(année, mois, port, taille, fonds, nom_sortie="image
 if __name__ == "__main__":
     year = "2025"
     mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
-    port = "ile-de-re-saint-martin-1026"
-    creation_image_complete(year, mois, port, 50, "4", port+"_"+year+".png")
+    port = "vieux-boucau-1052"
+    creation_image_complete(year, mois, port, 275, "7", port+"_"+year+".png")
+
 
