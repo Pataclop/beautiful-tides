@@ -310,11 +310,6 @@ def draw(url, port, month, year, nom):
     previous_day = "r"
     hauteur_précédente =  0.0
     hauteur_précédente_2 = 0.0
-
-    
-    #TODO il y a un bug occasionnel, je ne sais pas pourquoi, mais pour les pointillets en trait, pour le dernier jour (peut etre pour le premier aussi), 
-    #pour le dernier segment complet, le début du segment ne va âs etre raccord avec celui du jour précédent. il y a une marche. il doit y avoir un bug de hauteur précédente ou hauteur précedente 2
-    #Des fois aussi, la pente des traits est trop forte et le texte fait moche parce que trop proche.
     
 
     décalage_hauteur_petits_traits = 1.45
@@ -818,12 +813,10 @@ def creation_image_complete(année, mois, port, taille, fonds, nom_sortie="image
         
         print(nom_sortie, "  : FINITO")
 
-#TODO créer une image en tete avec l'année et le nom du port et peut etre d'autres choses je sais pas quoi
-#TODO ca serait bien d'avoir la lune aussi. 
 if __name__ == "__main__":
     year = "2025"
-    mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"]
+    mois = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"] 
     port = "vieux-boucau-1052"
-    creation_image_complete(year, mois, port, 275, "7", port+"_"+year+".png")
+    creation_image_complete(year, mois, port, 100, "7", port+"_"+year+".png")
 
 
