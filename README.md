@@ -37,7 +37,7 @@ il faut installer plein de dépendances via pip dans requirements.txt
 ./interface.py
 ```
 
-Puis choisir le ou  les ports, l'année (pour l'instant uniquement possible avec 2025), les mois de l'année et le fond (7 est joli)
+Puis choisir le ou  les ports, l'année en cours de préférence, mais foncitonne un peu jusqu'à 2025), les mois de l'année et le fond (7 est joli)
 
 
 ## License
