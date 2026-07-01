@@ -1,0 +1,389 @@
+{
+  "_comment": "Source unique de verite des ports. Chaque entree : name (affichage), code (identifiant meteoconsult), lat, lon, region, coast. Pour ajouter un port, ajoutez un objet ici (ou utilisez le bouton 'Ajouter un port' de l'interface). Le code doit correspondre a l'identifiant meteoconsult (dernier nombre de l'URL horaires-des-marees/<nom>-<code>).",
+  "ports": [
+    {
+      "name": "Dunkerque",
+      "code": "7",
+      "lat": 51.034,
+      "lon": 2.376,
+      "region": "Nord",
+      "coast": "Mer du Nord"
+    },
+    {
+      "name": "Paimpol",
+      "code": "957",
+      "lat": 48.785,
+      "lon": -3.045,
+      "region": "Cotes-d'Armor",
+      "coast": "Manche"
+    },
+    {
+      "name": "Brest",
+      "code": "4",
+      "lat": 48.39,
+      "lon": -4.486,
+      "region": "Finistere",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Loctudy",
+      "code": "987",
+      "lat": 47.834,
+      "lon": -4.17,
+      "region": "Finistere",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Lorient",
+      "code": "57",
+      "lat": 47.748,
+      "lon": -3.37,
+      "region": "Morbihan",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Portivy",
+      "code": "998",
+      "lat": 47.533,
+      "lon": -3.133,
+      "region": "Morbihan",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Port Maria",
+      "code": "999",
+      "lat": 47.48,
+      "lon": -3.123,
+      "region": "Morbihan",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Port Haliguen",
+      "code": "1001",
+      "lat": 47.489,
+      "lon": -3.099,
+      "region": "Morbihan",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Belle-Ile-le-Palais",
+      "code": "1000",
+      "lat": 47.349,
+      "lon": -3.152,
+      "region": "Morbihan",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Ile de Houat",
+      "code": "1780",
+      "lat": 47.39,
+      "lon": -2.955,
+      "region": "Morbihan",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Ile de Hoedic",
+      "code": "1010",
+      "lat": 47.343,
+      "lon": -2.874,
+      "region": "Morbihan",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Port Navalo",
+      "code": "1003",
+      "lat": 47.548,
+      "lon": -2.918,
+      "region": "Morbihan",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Le Logeo",
+      "code": "1008",
+      "lat": 47.561,
+      "lon": -2.788,
+      "region": "Morbihan",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Port du Crouesty",
+      "code": "1833",
+      "lat": 47.543,
+      "lon": -2.901,
+      "region": "Morbihan",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Penerf",
+      "code": "1009",
+      "lat": 47.508,
+      "lon": -2.627,
+      "region": "Morbihan",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Trehiguier",
+      "code": "1779",
+      "lat": 47.503,
+      "lon": -2.44,
+      "region": "Morbihan",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Le Croisic",
+      "code": "1011",
+      "lat": 47.293,
+      "lon": -2.513,
+      "region": "Loire-Atlantique",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Le Pouliguen",
+      "code": "1012",
+      "lat": 47.276,
+      "lon": -2.425,
+      "region": "Loire-Atlantique",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Pornichet",
+      "code": "1013",
+      "lat": 47.263,
+      "lon": -2.339,
+      "region": "Loire-Atlantique",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Saint-Nazaire",
+      "code": "21",
+      "lat": 47.267,
+      "lon": -2.201,
+      "region": "Loire-Atlantique",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Le Grand Charpentier",
+      "code": "1014",
+      "lat": 47.22,
+      "lon": -2.196,
+      "region": "Loire-Atlantique",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Pointe de Saint-Gildas",
+      "code": "1019",
+      "lat": 47.133,
+      "lon": -2.243,
+      "region": "Loire-Atlantique",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Pornic",
+      "code": "1020",
+      "lat": 47.112,
+      "lon": -2.103,
+      "region": "Loire-Atlantique",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Ile de Noirmoutier L'Herbaudiere",
+      "code": "1021",
+      "lat": 47.02,
+      "lon": -2.298,
+      "region": "Vendee",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Fromentine",
+      "code": "1022",
+      "lat": 46.893,
+      "lon": -2.143,
+      "region": "Vendee",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Ile d'Yeu Port Joinville",
+      "code": "1023",
+      "lat": 46.727,
+      "lon": -2.343,
+      "region": "Vendee",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Saint-Gilles-Croix-de-Vie",
+      "code": "1024",
+      "lat": 46.696,
+      "lon": -1.947,
+      "region": "Vendee",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Les Sables d'Olonne",
+      "code": "1025",
+      "lat": 46.497,
+      "lon": -1.795,
+      "region": "Vendee",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Ile de Re Saint-Martin",
+      "code": "1026",
+      "lat": 46.203,
+      "lon": -1.366,
+      "region": "Charente-Maritime",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "La Rochelle Ville",
+      "code": "1027",
+      "lat": 46.158,
+      "lon": -1.151,
+      "region": "Charente-Maritime",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "La Rochelle Pallice",
+      "code": "12",
+      "lat": 46.158,
+      "lon": -1.22,
+      "region": "Charente-Maritime",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Saint-Denis d'Oleron",
+      "code": "1067",
+      "lat": 46.028,
+      "lon": -1.382,
+      "region": "Charente-Maritime",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Ile d'Aix",
+      "code": "1028",
+      "lat": 46.013,
+      "lon": -1.175,
+      "region": "Charente-Maritime",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "La Cotiniere",
+      "code": "1836",
+      "lat": 45.905,
+      "lon": -1.339,
+      "region": "Charente-Maritime",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Pointe de Gatseau",
+      "code": "1033",
+      "lat": 45.788,
+      "lon": -1.238,
+      "region": "Charente-Maritime",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Royan",
+      "code": "1035",
+      "lat": 45.623,
+      "lon": -1.028,
+      "region": "Charente-Maritime",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Cordouan",
+      "code": "1034",
+      "lat": 45.585,
+      "lon": -1.175,
+      "region": "Gironde",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Pointe de Grave",
+      "code": "59",
+      "lat": 45.568,
+      "lon": -1.062,
+      "region": "Gironde",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Le Verdon-sur-Mer",
+      "code": "1036",
+      "lat": 45.543,
+      "lon": -1.061,
+      "region": "Gironde",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Richard",
+      "code": "1037",
+      "lat": 45.437,
+      "lon": -0.939,
+      "region": "Gironde",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Lacanau",
+      "code": "1049",
+      "lat": 45.0,
+      "lon": -1.203,
+      "region": "Gironde",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Cap Ferret",
+      "code": "1045",
+      "lat": 44.632,
+      "lon": -1.246,
+      "region": "Gironde",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Arcachon",
+      "code": "1046",
+      "lat": 44.658,
+      "lon": -1.164,
+      "region": "Gironde",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Biscarrosse",
+      "code": "1050",
+      "lat": 44.446,
+      "lon": -1.253,
+      "region": "Landes",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Mimizan",
+      "code": "1051",
+      "lat": 44.203,
+      "lon": -1.293,
+      "region": "Landes",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Vieux-Boucau",
+      "code": "1052",
+      "lat": 43.792,
+      "lon": -1.401,
+      "region": "Landes",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Boucau",
+      "code": "46",
+      "lat": 43.527,
+      "lon": -1.47,
+      "region": "Pyrenees-Atlantiques",
+      "coast": "Atlantique"
+    },
+    {
+      "name": "Saint-Jean-de-Luz",
+      "code": "61",
+      "lat": 43.389,
+      "lon": -1.663,
+      "region": "Pyrenees-Atlantiques",
+      "coast": "Atlantique"
+    }
+  ]
+}

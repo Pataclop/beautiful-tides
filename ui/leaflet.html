@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+  <style>
+    html, body, #map { height: 100%; margin: 0; }
+    .port-label { font: 12px 'Segoe UI', Arial; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    var PORTS = __PORTS_JSON__;
+    var bridge = null;
+    new QWebChannel(qt.webChannelTransport, function (channel) {
+      bridge = channel.objects.bridge;
+    });
+
+    var map = L.map('map').setView([46.6, -1.8], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    var markers = {};
+    var normalIcon = L.divIcon({className: '', html:
+      '<div style="width:12px;height:12px;border-radius:50%;background:#0d6efd;border:2px solid white;box-shadow:0 0 3px rgba(0,0,0,.5)"></div>',
+      iconSize: [12, 12], iconAnchor: [6, 6]});
+    var selectedIcon = L.divIcon({className: '', html:
+      '<div style="width:18px;height:18px;border-radius:50%;background:#dc3545;border:3px solid white;box-shadow:0 0 4px rgba(0,0,0,.6)"></div>',
+      iconSize: [18, 18], iconAnchor: [9, 9]});
+
+    var selectedCode = null;
+    PORTS.forEach(function (p) {
+      if (p.lat == null || p.lon == null) return;
+      var m = L.marker([p.lat, p.lon], {icon: normalIcon, title: p.name}).addTo(map);
+      m.bindTooltip(p.name, {direction: 'top', className: 'port-label'});
+      m.on('click', function () {
+        selectPort(p.code);
+        if (bridge) bridge.portClicked(String(p.code));
+      });
+      markers[String(p.code)] = m;
+    });
+
+    function selectPort(code) {
+      code = String(code);
+      if (selectedCode && markers[selectedCode]) markers[selectedCode].setIcon(normalIcon);
+      if (markers[code]) { markers[code].setIcon(selectedIcon); selectedCode = code; }
+    }
+    // Expose pour appels depuis Python
+    window.selectPortFromPython = function (code) {
+      selectPort(code);
+      if (markers[String(code)]) map.panTo(markers[String(code)].getLatLng());
+    };
+  </script>
+</body>
+</html>

@@ -1,686 +1,595 @@
-import sys
-import sqlite3
-from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QListWidget,
-                             QPushButton, QProgressBar, QMessageBox, QComboBox, QLabel,
-                             QCheckBox, QGridLayout, QGroupBox, QTextEdit, QSpinBox,
-                             QTableWidget, QTableWidgetItem, QHeaderView, QSplitter,
-                             QFrame, QStatusBar, QTabWidget, QWidget as QtWidget)
-from PyQt6.QtCore import QTimer, Qt, QThread, pyqtSignal
-from PyQt6.QtGui import QFont, QPalette, QColor
-import fonctions
+#!/usr/bin/env python3
+"""Beautiful Tides - interface graphique (PyQt6).
+
+Fonctionnalites :
+  - Onglet Generer : carte des ports (Leaflet en ligne ou carte hors-ligne),
+    recherche, galerie de fonds avec apercu, choix des mois, multi-fonds,
+    taille, generation en tache de fond (sans gel) avec progression.
+  - Onglet Base de donnees : remplissage de la base pour une annee (mois futurs
+    uniquement), sans generer d'images, avec progression et annulation.
+  - Onglet Ajouter un port / A propos.
+
+L'interface n'importe le moteur de rendu (matplotlib/cv2) que lors de la
+generation (import differe) : demarrage rapide et robuste.
+"""
 import os
-from datetime import datetime
+import sys
+import time
+import subprocess
 
-# Liste prédéfinie des ports disponibles
-AVAILABLE_PORTS = [
-    ("Brest", "4"),
-    ("Dunkerque", "7"),
-    ("Paimpol", "957"),
-    ("Loctudy", "987"),
-    ("Lorient", "57"),
-    ("Le Logeo", "1008"),
-    ("Port Navalo", "1003"),
-    ("Port du Crouesty", "1833"),
-    ("Portivy", "998"),
-    ("Port Maria", "999"),
-    ("Port Haliguen", "1001"),
-    ("Penerf", "1009"),
-    ("Trehiguier", "1779"),
-    ("Belle-Ile-le-Palais", "1000"),
-    ("Ile de Houat", "1780"),
-    ("Le de Hoedic", "1010"),
-    ("Le Croizic", "1011"),
-    ("Le Pouliguen", "1012"),
-    ("Pornichet", "1013"),
-    ("Saint-Nazaire", "21"),
-    ("Le Grand Charpentier", "1014"),
-    ("Pornic", "1020"),
-    ("Pointe de Saint-Gildas", "1019"),
-    ("Ile de Noirmoutier L'Herbaudiere", "1021"),
-    ("Fromentine", "1022"),
-    ("Ile d'Yeu Port Joinville", "1023"),
-    ("Saint-Gilles-Croix-de-Vie", "1024"),
-    ("Les Sables d'Olonne", "1025"),
-    ("Ile de Re Saint-Martin", "1026"),
-    ("La Rochelle Ville", "1027"),
-    ("La Rochelle Pallice", "12"),
-    ("Saint-Denis d'Oleron", "1067"),
-    ("Ile d'Aix", "1028"),
-    ("La Cotiniere", "1836"),
-    ("Pointe de Gatseau", "1033"),
-    ("Cordouan", "1034"),
-    ("Royan", "1035"),
-    ("Pointe de Grave", "59"),
-    ("Le Verdon-sur-Mer", "1036"),
-    ("Richard", "1037"),
-    ("Lacanau", "1049"),
-    ("Arcachon", "1046"),
-    ("Cap Ferret", "1045"),
-    ("Biscarosse", "1050"),
-    ("Mimizan", "1051"),
-    ("Vieux-Boucau", "1052"),
-    ("Boucau", "46"),
-    ("Saint-Jean-de-Luz", "61"),
-]
+# QtWebEngine (carte Leaflet) DOIT etre importe avant la creation du QApplication,
+# sinon son initialisation echoue et on bascule inutilement sur la carte hors-ligne.
+try:
+    from PyQt6 import QtWebEngineWidgets  # noqa: F401
+except Exception:
+    pass
 
-class DataFetcherThread(QThread):
-    """Thread pour récupérer les données en arrière-plan"""
-    progress = pyqtSignal(str)  # Signal pour les messages de progression
-    finished = pyqtSignal(bool, str)  # Signal quand terminé (succès, message)
+from PyQt6.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
+    QLabel, QPushButton, QComboBox, QSpinBox, QCheckBox, QLineEdit, QGroupBox,
+    QProgressBar, QTextEdit, QTabWidget, QListWidget, QListWidgetItem, QMessageBox,
+    QSplitter, QFileDialog, QFormLayout,
+)
+from PyQt6.QtCore import Qt, QThread, pyqtSignal
+from PyQt6.QtGui import QFont
 
-    def __init__(self, port_code, port_name, month, year):
+import db
+import ports as ports_module
+import scrap_all
+from ui.fond_gallery import FondGallery
+from ui.map_widget import create_port_map
+
+URL_BASE = "https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees"
+MONTHS_FR = db.MONTHS_FR
+OUTPUT_DIR = "OUTPUT IMAGES"
+
+
+def open_folder(path):
+    """Ouvre un dossier dans l'explorateur, multiplateforme."""
+    try:
+        if not os.path.isdir(path):
+            return
+        if sys.platform == "darwin":
+            subprocess.Popen(["open", path])
+        elif os.name == "nt":
+            os.startfile(path)  # noqa: pylint - Windows uniquement
+        else:
+            subprocess.Popen(["xdg-open", path])
+    except Exception:
+        pass
+
+
+# ---------------------------------------------------------------------------
+# Threads de travail
+# ---------------------------------------------------------------------------
+class GenerationWorker(QThread):
+    progress = pyqtSignal(int, int, str)
+    log = pyqtSignal(str)
+    finished_ok = pyqtSignal(bool, str)
+
+    def __init__(self, targets, year, months, size, fonds):
         super().__init__()
-        self.port_code = port_code
-        self.port_name = port_name
-        self.month = month
-        self.year = year
+        self.targets = targets      # liste de dicts port
+        self.year = str(year)
+        self.months = list(months)
+        self.size = int(size)
+        self.fonds = list(fonds)
+        self._cancel = False
+
+    def cancel(self):
+        self._cancel = True
 
     def run(self):
         try:
-            self.progress.emit(f"Récupération des données pour {self.port_name} {self.month}/{self.year}...")
-
-            # Appeler la fonction de récupération
-            port_full = f"{self.port_name.lower().replace(' ', '-')}-{self.port_code}"
-            result = fonctions.recuperation_et_sauvegarde_url(
-                'https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees',
-                port_full,
-                self.month,
-                self.year
-            )
-
-            if result:
-                self.progress.emit("Données récupérées avec succès !")
-                self.finished.emit(True, f"Données pour {self.port_name} {self.month}/{self.year} récupérées")
-            else:
-                self.finished.emit(False, f"Échec de récupération pour {self.port_name} {self.month}/{self.year}")
-
+            import fonctions  # import differe (charge matplotlib/cv2)
         except Exception as e:
-            self.finished.emit(False, f"Erreur: {str(e)}")
+            self.finished_ok.emit(False, f"Impossible de charger le moteur de rendu : {e}")
+            return
 
-class BeautifulTidesInterface(QWidget):
+        db.init_database()
+        total = len(self.targets)
+        generated = 0
+        for idx, port in enumerate(self.targets, 1):
+            if self._cancel:
+                self.finished_ok.emit(False, "Annule.")
+                return
+            name, code = port["name"], str(port["code"])
+            self.progress.emit(idx - 1, total, f"{name} : preparation des donnees...")
+            db.ensure_port_in_db(name, code)
+            slug = ports_module.port_slug(name, code)
+
+            # Determiner les mois disponibles (recuperer les mois FUTURS manquants).
+            available = []
+            fetchable_future = set(db.future_months(self.year, self.months))
+            for m in self.months:
+                mnum = db.MONTH_MAPPING.get(m, m)
+                _, complete, _, _ = db.check_complete_month_data(code, mnum, self.year)
+                if complete:
+                    available.append(m)
+                elif m in fetchable_future:
+                    self.log.emit(f"  telechargement {name} {m}...")
+                    try:
+                        res = db.recuperation_et_sauvegarde_url(URL_BASE, slug, m, self.year)
+                    except Exception as e:
+                        res = None
+                        self.log.emit(f"  erreur {m}: {e}")
+                    if res and res.strip():
+                        available.append(m)
+                    else:
+                        self.log.emit(f"  {m}: donnees indisponibles (mois trop lointain ?) - ignore")
+                    time.sleep(2.0)  # courtoisie : limite de frequence du site
+                else:
+                    self.log.emit(f"  {m}: mois passe absent de la base (ignore)")
+
+            if not available:
+                self.log.emit(f"{name} : aucune donnee disponible, port ignore.")
+                continue
+
+            self.progress.emit(idx - 1, total, f"{name} : generation ({len(available)} mois)...")
+            output_name = f"{name.lower().replace(' ', '_')}_{self.year}.png"
+            try:
+                fonctions.creation_image_complete(
+                    self.year, available, slug, self.size, self.fonds, output_name)
+                generated += 1
+                self.log.emit(f"{name} : OK -> {len(self.fonds)} image(s)")
+            except Exception as e:
+                self.log.emit(f"{name} : ERREUR de generation : {e}")
+            self.progress.emit(idx, total, f"{name} : termine")
+
+        if generated:
+            self.finished_ok.emit(True, f"{generated}/{total} port(s) generes.")
+        else:
+            self.finished_ok.emit(False, "Aucune image generee (donnees manquantes ?).")
+
+
+class FillDbWorker(QThread):
+    progress = pyqtSignal(int, int, str)
+    finished_ok = pyqtSignal(bool, str)
+
+    def __init__(self, targets, pump=True, year=None):
+        super().__init__()
+        self.targets = targets
+        self.pump = pump
+        self.year = str(year) if year else None
+        self._cancel = False
+
+    def cancel(self):
+        self._cancel = True
+
+    def run(self):
+        try:
+            if self.pump:
+                stats = scrap_all.pump_future(
+                    ports=self.targets,
+                    progress_cb=lambda d, t, m: self.progress.emit(d, t, m),
+                    cancel=lambda: self._cancel,
+                )
+                msg = (f"Termine : {stats['success']} mois récupérés, "
+                       f"{stats['skipped']} déjà complets, {stats['errors']} indisponibles "
+                       f"sur {stats['ports']} ports (en {stats['duration_s']:.0f}s).")
+            else:
+                stats = scrap_all.fill_database(
+                    self.year, ports=self.targets,
+                    progress_cb=lambda d, t, m: self.progress.emit(d, t, m),
+                    cancel=lambda: self._cancel,
+                )
+                msg = (f"Termine : {stats['success']} OK, {stats['skipped']} déjà complets, "
+                       f"{stats['errors']} échecs sur {stats['total']} (en {stats['duration_s']:.0f}s).")
+            self.finished_ok.emit(True, msg)
+        except Exception as e:
+            self.finished_ok.emit(False, f"Erreur : {e}")
+
+
+# ---------------------------------------------------------------------------
+# Selecteur de mois
+# ---------------------------------------------------------------------------
+class MonthSelector(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.checks = {}
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        grid = QGridLayout()
+        grid.setSpacing(2)
+        for i, m in enumerate(MONTHS_FR):
+            cb = QCheckBox(m.capitalize())
+            cb.setChecked(True)
+            self.checks[m] = cb
+            grid.addWidget(cb, i // 3, i % 3)
+        lay.addLayout(grid)
+        btns = QHBoxLayout()
+        for label, fn in [("Tous", self._all), ("Aucun", self._none), ("A venir", self._future)]:
+            b = QPushButton(label)
+            b.setMaximumHeight(26)
+            b.clicked.connect(fn)
+            btns.addWidget(b)
+        lay.addLayout(btns)
+
+    def _all(self):
+        for cb in self.checks.values():
+            cb.setChecked(True)
+
+    def _none(self):
+        for cb in self.checks.values():
+            cb.setChecked(False)
+
+    def _future(self):
+        year = self.window().current_year() if hasattr(self.window(), "current_year") else None
+        fut = set(db.future_months(year)) if year else set(MONTHS_FR)
+        for m, cb in self.checks.items():
+            cb.setChecked(m in fut)
+
+    def selected(self):
+        return [m for m in MONTHS_FR if self.checks[m].isChecked()]
+
+
+# ---------------------------------------------------------------------------
+# Fenetre principale
+# ---------------------------------------------------------------------------
+class BeautifulTides(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.current_year = datetime.now().year
-        self.initUI()
+        self.ports = ports_module.load_ports()
+        self.selected_port = None
+        self._gen_worker = None
+        self._fill_worker = None
+        self.setWindowTitle("🌊 Beautiful Tides")
+        self.resize(1180, 760)
+        self._build_ui()
 
-    def initUI(self):
-        self.setWindowTitle('🌊 Beautiful Tides - Générateur de Calendriers de Marées')
-        self.setGeometry(200, 200, 800, 600)
+    def current_year(self):
+        return self.year_spin.value()
 
-        # Style moderne
-        self.setStyleSheet("""
-            QWidget {
-                background-color: #f8f9fa;
-                font-family: 'Segoe UI', Arial, sans-serif;
-            }
-            QGroupBox {
-                font-weight: bold;
-                border: 2px solid #007bff;
-                border-radius: 8px;
-                margin-top: 1ex;
-                background-color: white;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 10px 0 10px;
-                color: #007bff;
-                font-size: 14px;
-            }
-            QPushButton {
-                background-color: #007bff;
-                color: white;
-                border: none;
-                padding: 12px 24px;
-                border-radius: 6px;
-                font-size: 14px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #0056b3;
-            }
-            QPushButton:pressed {
-                background-color: #004085;
-            }
-            QPushButton:disabled {
-                background-color: #6c757d;
-            }
-            QComboBox {
-                border: 2px solid #ced4da;
-                border-radius: 4px;
-                padding: 8px;
-                background-color: white;
-                min-width: 120px;
-            }
-            QComboBox:hover {
-                border-color: #007bff;
-            }
-            QSpinBox {
-                border: 2px solid #ced4da;
-                border-radius: 4px;
-                padding: 8px;
-                background-color: white;
-                min-width: 80px;
-            }
-            QSpinBox:hover {
-                border-color: #007bff;
-            }
-            QLabel {
-                color: #495057;
-                font-size: 13px;
-            }
-            QProgressBar {
-                border: 2px solid #ced4da;
-                border-radius: 4px;
-                text-align: center;
-                background-color: white;
-            }
-            QProgressBar::chunk {
-                background-color: #28a745;
-                border-radius: 2px;
-            }
-            QTextEdit {
-                border: 2px solid #ced4da;
-                border-radius: 4px;
-                background-color: white;
-                font-family: 'Consolas', monospace;
-                font-size: 11px;
-            }
-        """)
+    # ---- construction ----
+    def _build_ui(self):
+        self.setStyleSheet(STYLE)
+        tabs = QTabWidget()
+        tabs.addTab(self._build_generate_tab(), "🎨  Générer")
+        tabs.addTab(self._build_db_tab(), "🗄️  Base de données")
+        tabs.addTab(self._build_ports_tab(), "➕  Ports")
+        tabs.addTab(self._build_about_tab(), "ℹ️  À propos")
+        self.setCentralWidget(tabs)
 
-        # Layout principal
-        main_layout = QVBoxLayout()
-        main_layout.setSpacing(20)
-        main_layout.setContentsMargins(30, 30, 30, 30)
+    def _build_generate_tab(self):
+        w = QWidget()
+        outer = QHBoxLayout(w)
+        split = QSplitter(Qt.Orientation.Horizontal)
 
-        # Titre principal
-        title_label = QLabel("🗓️ Générateur de Calendriers de Marées")
-        title_label.setStyleSheet("""
-            font-size: 24px;
-            font-weight: bold;
-            color: #007bff;
-            margin-bottom: 10px;
-        """)
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        main_layout.addWidget(title_label)
+        # --- gauche : carte + recherche + liste ---
+        left = QWidget()
+        lv = QVBoxLayout(left)
+        lv.addWidget(QLabel("<b>Choix du port</b>"))
+        self.map_widget, online = create_port_map(self.ports)
+        self.map_widget.portSelected.connect(self._on_port_selected)
+        lv.addWidget(self.map_widget, 1)
 
-        # Création de l'interface simplifiée
-        main_container = self.create_simple_calendar_interface()
-        main_layout.addWidget(main_container)
+        self.search = QLineEdit()
+        self.search.setPlaceholderText("Rechercher un port...")
+        self.search.textChanged.connect(self._filter_ports)
+        lv.addWidget(self.search)
 
-        self.setLayout(main_layout)
+        self.port_list = QListWidget()
+        self.port_list.setMaximumHeight(160)
+        self._fill_port_list(self.ports)
+        self.port_list.itemClicked.connect(self._on_list_clicked)
+        lv.addWidget(self.port_list)
 
-        # Charger les ports au démarrage
-        QTimer.singleShot(100, self.load_ports)
+        self.all_ports_cb = QCheckBox("Générer pour TOUS les ports")
+        lv.addWidget(self.all_ports_cb)
 
-    def create_simple_calendar_interface(self):
-        """Créer l'interface ultra-simplifiée pour la génération de calendriers"""
-        # Conteneur principal avec style moderne
-        main_container = QWidget()
-        layout = QVBoxLayout()
-        layout.setSpacing(15)
+        map_note = "Carte en ligne (OpenStreetMap)" if online else "Carte hors-ligne"
+        note = QLabel(map_note)
+        note.setStyleSheet("color:#6c757d; font-size:11px;")
+        lv.addWidget(note)
 
-        # Section Configuration
-        config_group = QGroupBox("⚙️ Configuration")
-        config_layout = QHBoxLayout()
-        config_layout.setSpacing(20)
+        # --- droite : options ---
+        right = QWidget()
+        rv = QVBoxLayout(right)
 
-        # Port
-        port_layout = QVBoxLayout()
-        port_label = QLabel("🏖️ Port")
-        self.cal_port_combo = QComboBox()
-        self.all_ports_checkbox = QCheckBox("Tous les ports")
-        self.all_ports_checkbox.setToolTip("Générer le calendrier pour tous les ports disponibles")
-        port_layout.addWidget(port_label)
-        port_layout.addWidget(self.cal_port_combo)
-        port_layout.addWidget(self.all_ports_checkbox)
-        config_layout.addLayout(port_layout)
+        cfg = QGroupBox("Configuration")
+        form = QFormLayout(cfg)
+        self.year_spin = QSpinBox()
+        self.year_spin.setRange(2020, 2035)
+        from datetime import datetime
+        self.year_spin.setValue(datetime.now().year)
+        form.addRow("Année", self.year_spin)
 
-        # Connecter la checkbox pour désactiver/activer le combo
-        self.all_ports_checkbox.toggled.connect(self.on_all_ports_toggled)
-
-        # Année
-        year_layout = QVBoxLayout()
-        year_label = QLabel("📅 Année")
-        self.cal_year_spin = QSpinBox()
-        self.cal_year_spin.setRange(2020, 2030)
-        self.cal_year_spin.setValue(self.current_year)
-        year_layout.addWidget(year_label)
-        year_layout.addWidget(self.cal_year_spin)
-        config_layout.addLayout(year_layout)
-
-        # Taille (DPI)
-        size_layout = QVBoxLayout()
-        size_label = QLabel("📏 Taille (pixels)")
         self.size_spin = QSpinBox()
         self.size_spin.setRange(50, 500)
+        self.size_spin.setSingleStep(25)
         self.size_spin.setValue(100)
-        self.size_spin.setSingleStep(50)
-        size_layout.addWidget(size_label)
-        size_layout.addWidget(self.size_spin)
-        config_layout.addLayout(size_layout)
-
-        # Fond
-        fond_layout = QVBoxLayout()
-        fond_label = QLabel("🎨 Fond")
-        self.fond_combo = QComboBox()
-        fonds = ['1', '2', '3', '4', '5', '6', '7', '8']
-        self.fond_combo.addItems(fonds)
-        self.fond_combo.setCurrentText('7')
-        fond_layout.addWidget(fond_label)
-        fond_layout.addWidget(self.fond_combo)
-        config_layout.addLayout(fond_layout)
-
-        config_layout.addStretch()
-        config_group.setLayout(config_layout)
-        layout.addWidget(config_group)
-
-        # Bouton principal de génération
-        self.generate_btn = QPushButton("🚀 Générer le Calendrier")
-        self.generate_btn.setMinimumHeight(50)
-        self.generate_btn.clicked.connect(self.generer_calendrier_avec_recuperation_auto)
-        layout.addWidget(self.generate_btn)
-
-        # Section Progression
-        progress_group = QGroupBox("📊 Progression")
-        progress_layout = QVBoxLayout()
-
-        self.cal_progress_bar = QProgressBar()
-        self.cal_progress_bar.setVisible(False)
-        self.cal_progress_bar.setMinimumHeight(25)
-        progress_layout.addWidget(self.cal_progress_bar)
-
-        self.progress_details = QLabel("Prêt à générer votre calendrier")
-        self.progress_details.setStyleSheet("color: #6c757d; font-style: italic;")
-        self.progress_details.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        progress_layout.addWidget(self.progress_details)
-
-        progress_group.setLayout(progress_layout)
-        layout.addWidget(progress_group)
-
-        # Section Résultats
-        results_group = QGroupBox("📋 Résultats")
-        results_layout = QVBoxLayout()
-
-        self.results_text = QTextEdit()
-        self.results_text.setMaximumHeight(200)
-        self.results_text.setReadOnly(True)
-        results_layout.addWidget(self.results_text)
-
-        results_group.setLayout(results_layout)
-        layout.addWidget(results_group)
-
-        main_container.setLayout(layout)
-
-        # Retourner le conteneur pour l'ajouter dans initUI
-        return main_container
-
-    def generer_calendriers_tous_ports(self):
-        """Générer le calendrier pour tous les ports disponibles"""
-        year = self.cal_year_spin.value()
-        size = self.size_spin.value()
-        fond = self.fond_combo.currentText()
-
-        # Tous les mois de l'année
-        all_months = ['janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',
-                     'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre']
-
-        # Désactiver le bouton pendant le processus
-        self.generate_btn.setEnabled(False)
-        self.cal_progress_bar.setVisible(True)
-
-        total_operations = len(AVAILABLE_PORTS) * (len(all_months) + 1)  # +1 pour la génération
-        self.cal_progress_bar.setRange(0, total_operations)
-        self.cal_progress_bar.setValue(0)
-
-        self.results_text.clear()
-        self.results_text.append(f"📅 Génération calendriers pour TOUS LES PORTS {year}")
-        self.results_text.append(f"Configuration: {size}px, Fond {fond}")
-        self.results_text.append(f"Nombre de ports: {len(AVAILABLE_PORTS)}")
-        self.results_text.append("")
-
-        operation_count = 0
-
-        try:
-            for port_idx, (port_name, port_code) in enumerate(AVAILABLE_PORTS):
-                self.results_text.append(f"🏖️ Port {port_idx+1}/{len(AVAILABLE_PORTS)}: {port_name}")
-                self.progress_details.setText(f"Traitement: {port_name}")
-
-                # S'assurer que le port existe dans la base de données
-                if not self.ensure_port_in_db(port_name, port_code):
-                    self.results_text.append(f"  ❌ Impossible d'ajouter le port {port_name}")
-                    continue
-
-                # Vérifier et récupérer les données manquantes
-                missing_months = []
-                for month in all_months:
-                    month_num = fonctions.MONTH_MAPPING.get(month, str(all_months.index(month) + 1).zfill(2))
-                    has_data, is_complete, _, _ = fonctions.check_complete_month_data(port_code, month_num, str(year))
-
-                    if not is_complete:
-                        missing_months.append(month)
-
-                    operation_count += 1
-                    self.cal_progress_bar.setValue(operation_count)
-
-                # Récupérer les données manquantes
-                if missing_months:
-                    self.results_text.append(f"  📥 Récupération de {len(missing_months)} mois...")
-                    for month in missing_months:
-                        port_formatted = f"{port_name.lower().replace(' ', '-')}-{port_code}"
-                        result = fonctions.recuperation_et_sauvegarde_url(
-                            'https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees',
-                            port_formatted,
-                            month,
-                            str(year)
-                        )
-                        if not result:
-                            self.results_text.append(f"    ❌ Échec: {month}")
-
-                # Générer le calendrier pour ce port
-                self.results_text.append("  🎨 Génération du calendrier...")
-                port_formatted = f"{port_name.lower().replace(' ', '-')}-{port_code}"
-                output_name = f"{port_name.lower().replace(' ', '_')}_{year}.png"
-                fonctions.creation_image_complete(str(year), all_months, port_formatted, size, fond, output_name)
-
-                self.results_text.append(f"  ✅ Terminé: {output_name}")
-                operation_count += 1
-                self.cal_progress_bar.setValue(operation_count)
-
-            self.cal_progress_bar.setValue(total_operations)
-            self.progress_details.setText("Terminé pour tous les ports !")
-
-            self.results_text.append("")
-            self.results_text.append("🎉 Génération terminée pour tous les ports !")
-
-            # Ouvrir le dossier de sortie
-            output_dir = "OUTPUT IMAGES"
-            if os.path.exists(output_dir):
-                os.startfile(output_dir)
-
-        except Exception as e:
-            self.results_text.append(f"❌ Erreur générale: {e}")
-            QMessageBox.critical(self, 'Erreur', f'Erreur lors du processus: {e}')
-
-        finally:
-            self.generate_btn.setEnabled(True)
-            self.cal_progress_bar.setVisible(False)
-            self.progress_details.setText("Prêt")
-
-    def on_all_ports_toggled(self, checked):
-        """Appelé quand la checkbox 'Tous les ports' change"""
-        self.cal_port_combo.setEnabled(not checked)
-        if checked:
-            self.cal_port_combo.setCurrentIndex(-1)  # Aucun port sélectionné
-
-        """Créer l'onglet de génération de calendriers"""
-        calendar_tab = QtWidget()
-        layout = QVBoxLayout()
-
-        # Titre
-        title = QLabel("🗓️ Génération de calendriers")
-        title.setFont(QFont("Arial", 14, QFont.Weight.Bold))
-        layout.addWidget(title)
-
-        # Configuration simple
-        config_group = QGroupBox("Configuration")
-        config_layout = QHBoxLayout()
-
-        # Port
-        config_layout.addWidget(QLabel("Port:"))
-        self.cal_port_combo = QComboBox()
-        config_layout.addWidget(self.cal_port_combo)
-
-        # Année
-        config_layout.addWidget(QLabel("Année:"))
-        self.cal_year_spin = QSpinBox()
-        self.cal_year_spin.setRange(2020, 2030)
-        self.cal_year_spin.setValue(self.current_year)
-        config_layout.addWidget(self.cal_year_spin)
-
-        # Taille
-        config_layout.addWidget(QLabel("Taille (px):"))
-        self.size_spin = QSpinBox()
-        self.size_spin.setRange(50, 500)
-        self.size_spin.setSingleStep(50)  # Pas de 50 pour atteindre facilement les seuils
-        self.size_spin.setValue(100)
-        config_layout.addWidget(self.size_spin)
-
-        # Fond
-        config_layout.addWidget(QLabel("Fond:"))
-        self.fond_combo = QComboBox()
-        fonds = ['1', '2', '3', '4', '5', '6', '7', '8']
-        self.fond_combo.addItems(fonds)
-        self.fond_combo.setCurrentText('7')
-        config_layout.addWidget(self.fond_combo)
-
-        config_layout.addStretch()
-        config_group.setLayout(config_layout)
-        layout.addWidget(config_group)
-
-        # Bouton de génération
-        self.generate_btn = QPushButton("🎨 Générer le calendrier")
-        self.generate_btn.clicked.connect(self.generer_calendrier_avec_recuperation_auto)
-        layout.addWidget(self.generate_btn)
-
-        # Barre de progression détaillée
-        progress_group = QGroupBox("Progression")
-        progress_layout = QVBoxLayout()
-
-        self.cal_progress_bar = QProgressBar()
-        self.cal_progress_bar.setVisible(False)
-        progress_layout.addWidget(self.cal_progress_bar)
-
-        self.progress_details = QLabel("Prêt")
-        progress_layout.addWidget(self.progress_details)
-
-        progress_group.setLayout(progress_layout)
-        layout.addWidget(progress_group)
-
-        # Résultats
-        results_group = QGroupBox("Résultats")
-        results_layout = QVBoxLayout()
-        self.results_text = QTextEdit()
-        self.results_text.setMaximumHeight(100)
-        self.results_text.setReadOnly(True)
-        results_layout.addWidget(self.results_text)
-        results_group.setLayout(results_layout)
-        layout.addWidget(results_group)
-
-        calendar_tab.setLayout(layout)
-
-
-
-    def load_ports(self):
-        """Charger la liste des ports dans le combo box"""
-        try:
-            # Vider le combo box
-            self.cal_port_combo.clear()
-
-            # Ajouter tous les ports disponibles
-            for port_name, port_code in AVAILABLE_PORTS:
-                display_text = f"{port_name} ({port_code})"
-                self.cal_port_combo.addItem(display_text, (port_name, port_code))
-
-            # Sélectionner Vieux-Boucau par défaut
-            self.cal_port_combo.setCurrentIndex(len(AVAILABLE_PORTS) - 1)  # Vieux-Boucau
-
-        except Exception as e:
-            QMessageBox.critical(self, 'Erreur', f'Erreur lors du chargement des ports: {e}')
-
-    def ensure_port_in_db(self, port_name, port_code):
-        """S'assurer qu'un port existe dans la base de données"""
-        try:
-            conn = sqlite3.connect('tides_database.db')
-            cursor = conn.cursor()
-
-            # Vérifier si le port existe
-            cursor.execute('SELECT id FROM ports WHERE port_code = ?', (port_code,))
-            existing = cursor.fetchone()
-
-            if not existing:
-                # Ajouter le port s'il n'existe pas
-                cursor.execute('INSERT INTO ports (port_name, port_code) VALUES (?, ?)',
-                             (port_name, port_code))
-                conn.commit()
-                # Port ajouté silencieusement
-
-            conn.close()
-            return True
-
-        except sqlite3.Error as e:
-            # Erreur lors de l'ajout du port (silencieuse)
-            return False
-
-
-
-
-
-
-    def on_fetch_progress(self, message):
-        """Callback pour les messages de progression"""
-        self.results_text.append(message)
-        self.progress_details.setText(message)
-
-    def on_fetch_finished(self, success, message):
-        """Callback quand la récupération est terminée"""
-        if success:
-            self.results_text.append(f"✅ {message}")
-            self.progress_details.setText("Terminé avec succès")
+        self.size_spin.setToolTip("Résolution (DPI). 100 = qualité standard, plus = plus grand/lent.")
+        form.addRow("Taille (px)", self.size_spin)
+
+        self.month_selector = MonthSelector()
+        form.addRow("Mois", self.month_selector)
+        rv.addWidget(cfg)
+
+        fond_box = QGroupBox("Fond (cliquer pour choisir ; Ctrl+clic = plusieurs)")
+        fbl = QVBoxLayout(fond_box)
+        self.fond_gallery = FondGallery(multi=True, columns=4)
+        self.fond_gallery.set_selected(["7"])
+        fbl.addWidget(self.fond_gallery)
+        rv.addWidget(fond_box, 1)
+
+        self.generate_btn = QPushButton("🚀  Générer le calendrier")
+        self.generate_btn.setObjectName("primary")
+        self.generate_btn.setMinimumHeight(46)
+        self.generate_btn.clicked.connect(self._start_generation)
+        rv.addWidget(self.generate_btn)
+
+        self.gen_progress = QProgressBar()
+        self.gen_progress.setVisible(False)
+        rv.addWidget(self.gen_progress)
+        self.gen_status = QLabel("Prêt.")
+        self.gen_status.setStyleSheet("color:#6c757d;")
+        rv.addWidget(self.gen_status)
+
+        self.gen_log = QTextEdit()
+        self.gen_log.setReadOnly(True)
+        self.gen_log.setMaximumHeight(150)
+        rv.addWidget(self.gen_log)
+
+        split.addWidget(left)
+        split.addWidget(right)
+        split.setSizes([440, 720])
+        outer.addWidget(split)
+        return w
+
+    def _build_db_tab(self):
+        w = QWidget()
+        v = QVBoxLayout(w)
+        v.addWidget(QLabel("<b>Aspirer les données de marées</b> (télécharge et stocke, "
+                           "sans générer d'images)"))
+        info = QLabel("Pour chaque port, télécharge <b>tous les mois à venir</b> "
+                      "(mois courant puis suivants, sur plusieurs années) jusqu'à "
+                      "l'horizon publié par le site. Les mois déjà en base sont ignorés. "
+                      "Un délai entre requêtes respecte la limite de fréquence du site.")
+        info.setWordWrap(True)
+        info.setStyleSheet("color:#6c757d;")
+        v.addWidget(info)
+
+        row = QHBoxLayout()
+        self.db_all_cb = QCheckBox("Tous les ports")
+        self.db_all_cb.setChecked(True)
+        row.addWidget(self.db_all_cb)
+        row.addStretch()
+        self.fill_btn = QPushButton("📥  Aspirer tout le possible")
+        self.fill_btn.setObjectName("primary")
+        self.fill_btn.clicked.connect(self._start_fill)
+        row.addWidget(self.fill_btn)
+        self.fill_cancel_btn = QPushButton("Annuler")
+        self.fill_cancel_btn.setEnabled(False)
+        self.fill_cancel_btn.clicked.connect(self._cancel_fill)
+        row.addWidget(self.fill_cancel_btn)
+        v.addLayout(row)
+
+        self.fill_progress = QProgressBar()
+        self.fill_progress.setVisible(False)
+        v.addWidget(self.fill_progress)
+        self.fill_status = QLabel("Prêt.")
+        self.fill_status.setStyleSheet("color:#6c757d;")
+        v.addWidget(self.fill_status)
+
+        self.fill_log = QTextEdit()
+        self.fill_log.setReadOnly(True)
+        v.addWidget(self.fill_log, 1)
+        return w
+
+    def _build_ports_tab(self):
+        w = QWidget()
+        v = QVBoxLayout(w)
+        v.addWidget(QLabel("<b>Ajouter un port</b>"))
+        v.addWidget(QLabel("Le code est l'identifiant meteoconsult (dernier nombre de l'URL "
+                           "horaires-des-marees/&lt;nom&gt;-&lt;code&gt;)."))
+        form = QFormLayout()
+        self.np_name = QLineEdit()
+        self.np_code = QLineEdit()
+        self.np_lat = QLineEdit()
+        self.np_lon = QLineEdit()
+        self.np_region = QLineEdit()
+        self.np_coast = QComboBox()
+        self.np_coast.addItems(["Atlantique", "Manche", "Mer du Nord", "Mediterranee", "Corse"])
+        form.addRow("Nom", self.np_name)
+        form.addRow("Code meteoconsult", self.np_code)
+        form.addRow("Latitude (optionnel)", self.np_lat)
+        form.addRow("Longitude (optionnel)", self.np_lon)
+        form.addRow("Région (optionnel)", self.np_region)
+        form.addRow("Côte", self.np_coast)
+        v.addLayout(form)
+        add_btn = QPushButton("➕  Ajouter le port")
+        add_btn.setObjectName("primary")
+        add_btn.clicked.connect(self._add_port)
+        v.addWidget(add_btn)
+        self.ports_info = QLabel(f"{len(self.ports)} ports actuellement disponibles.")
+        self.ports_info.setStyleSheet("color:#6c757d;")
+        v.addWidget(self.ports_info)
+        v.addStretch()
+        return w
+
+    def _build_about_tab(self):
+        w = QWidget()
+        v = QVBoxLayout(w)
+        txt = QLabel(
+            "<h2>🌊 Beautiful Tides</h2>"
+            "<p>Génère des affiches annuelles de calendriers de marées pour les ports français.</p>"
+            "<p><b>Données :</b> marine.meteoconsult.fr (stockées en base SQLite locale).</p>"
+            f"<p><b>Dossier de sortie :</b> {os.path.abspath(OUTPUT_DIR)}</p>"
+            "<p>Astuce : choisissez le port sur la carte, un ou plusieurs fonds, puis Générer.</p>")
+        txt.setWordWrap(True)
+        txt.setTextFormat(Qt.TextFormat.RichText)
+        v.addWidget(txt)
+        open_btn = QPushButton("📁  Ouvrir le dossier de sortie")
+        open_btn.clicked.connect(lambda: open_folder(OUTPUT_DIR))
+        v.addWidget(open_btn, alignment=Qt.AlignmentFlag.AlignLeft)
+        v.addStretch()
+        return w
+
+    # ---- selection des ports ----
+    def _fill_port_list(self, ports):
+        self.port_list.clear()
+        for p in ports:
+            item = QListWidgetItem(f"{p['name']}  ({p['coast']})")
+            item.setData(Qt.ItemDataRole.UserRole, p)
+            self.port_list.addItem(item)
+
+    def _filter_ports(self, text):
+        text = text.strip().lower()
+        filtered = [p for p in self.ports if text in p["name"].lower()] if text else self.ports
+        self._fill_port_list(filtered)
+
+    def _on_list_clicked(self, item):
+        p = item.data(Qt.ItemDataRole.UserRole)
+        self._set_selected_port(p)
+        if hasattr(self.map_widget, "select_code"):
+            self.map_widget.select_code(p["code"])
+
+    def _on_port_selected(self, p):
+        self._set_selected_port(p)
+
+    def _set_selected_port(self, p):
+        self.selected_port = p
+        self.gen_status.setText(f"Port sélectionné : {p['name']}")
+
+    # ---- generation ----
+    def _start_generation(self):
+        if self._gen_worker and self._gen_worker.isRunning():
+            return
+        fonds = self.fond_gallery.selected_ids()
+        if not fonds:
+            QMessageBox.warning(self, "Fond", "Choisissez au moins un fond.")
+            return
+        months = self.month_selector.selected()
+        if not months:
+            QMessageBox.warning(self, "Mois", "Choisissez au moins un mois.")
+            return
+
+        if self.all_ports_cb.isChecked():
+            targets = list(self.ports)
+        elif self.selected_port:
+            targets = [self.selected_port]
         else:
-            self.results_text.append(f"❌ {message}")
-            self.progress_details.setText("Échec")
-            QMessageBox.warning(self, 'Erreur', message)
-
-        # Mettre à jour l'état des données
-        self.mettre_a_jour_statut_donnees_selectionnees()
-
-    def generer_calendrier_avec_recuperation_auto(self):
-        """Générer le calendrier avec récupération automatique des données manquantes"""
-        all_ports = self.all_ports_checkbox.isChecked()
-
-        if all_ports:
-            # Générer pour tous les ports
-            self.generer_calendriers_tous_ports()
+            QMessageBox.warning(self, "Port", "Choisissez un port (carte ou liste) "
+                                              "ou cochez « Tous les ports ».")
             return
 
-        # Générer pour un seul port
-        if self.cal_port_combo.currentData() is None:
-            QMessageBox.warning(self, 'Erreur', 'Veuillez sélectionner un port.')
-            return
-
-        port_name, port_code = self.cal_port_combo.currentData()
-
-        # S'assurer que le port existe dans la base de données
-        if not self.ensure_port_in_db(port_name, port_code):
-            QMessageBox.warning(self, 'Erreur', f'Impossible d\'ajouter le port {port_name} à la base de données.')
-            return
-
-        year = self.cal_year_spin.value()
-        size = self.size_spin.value()
-        fond = self.fond_combo.currentText()
-
-        # Tous les mois de l'année
-        all_months = ['janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',
-                     'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre']
-
-        # Désactiver le bouton pendant le processus
+        self.gen_log.clear()
+        self.gen_progress.setVisible(True)
+        self.gen_progress.setRange(0, len(targets))
+        self.gen_progress.setValue(0)
         self.generate_btn.setEnabled(False)
-        self.cal_progress_bar.setVisible(True)
-        self.cal_progress_bar.setRange(0, len(all_months) + 1)  # +1 pour la génération finale
-        self.cal_progress_bar.setValue(0)
 
-        self.results_text.clear()
-        self.results_text.append(f"📅 Génération calendrier {port_name} {year}")
-        self.results_text.append(f"Configuration: {size}px, Fond {fond}")
-        self.results_text.append("")
+        self._gen_worker = GenerationWorker(
+            targets, self.year_spin.value(), months, self.size_spin.value(), fonds)
+        self._gen_worker.progress.connect(self._on_gen_progress)
+        self._gen_worker.log.connect(self.gen_log.append)
+        self._gen_worker.finished_ok.connect(self._on_gen_finished)
+        self._gen_worker.start()
 
-        self.progress_details.setText("Vérification des données existantes...")
+    def _on_gen_progress(self, done, total, msg):
+        self.gen_progress.setMaximum(total)
+        self.gen_progress.setValue(done)
+        self.gen_status.setText(msg)
 
-        try:
-            # Vérifier et récupérer les données manquantes mois par mois
-            missing_months = []
-            for i, month in enumerate(all_months):
-                month_num = fonctions.MONTH_MAPPING.get(month, str(all_months.index(month) + 1).zfill(2))
-                has_data, is_complete, _, _ = fonctions.check_complete_month_data(port_code, month_num, str(year))
+    def _on_gen_finished(self, ok, msg):
+        self.gen_progress.setVisible(False)
+        self.generate_btn.setEnabled(True)
+        self.gen_status.setText(msg)
+        self.gen_log.append(("✅ " if ok else "⚠️ ") + msg)
+        if ok:
+            open_folder(OUTPUT_DIR)
 
-                if not is_complete:
-                    missing_months.append(month)
+    # ---- remplissage base ----
+    def _start_fill(self):
+        if self._fill_worker and self._fill_worker.isRunning():
+            return
+        if self.db_all_cb.isChecked() or not self.selected_port:
+            targets = list(self.ports)
+        else:
+            targets = [self.selected_port]
+        self.fill_log.clear()
+        self.fill_progress.setVisible(True)
+        self.fill_progress.setRange(0, len(targets))
+        self.fill_btn.setEnabled(False)
+        self.fill_cancel_btn.setEnabled(True)
+        self._fill_worker = FillDbWorker(targets, pump=True)
+        self._fill_worker.progress.connect(self._on_fill_progress)
+        self._fill_worker.finished_ok.connect(self._on_fill_finished)
+        self._fill_worker.start()
 
-                self.cal_progress_bar.setValue(i + 1)
-                self.progress_details.setText(f"Vérification: {month} - {'✅' if is_complete else '❌'}")
+    def _on_fill_progress(self, done, total, msg):
+        self.fill_progress.setRange(0, max(total, 1))
+        self.fill_progress.setValue(done)
+        self.fill_status.setText(msg)
+        self.fill_log.append(msg)
 
-            # Récupérer les données manquantes
-            if missing_months:
-                self.results_text.append(f"📥 Récupération de {len(missing_months)} mois manquants...")
-                self.progress_details.setText(f"Récupération de {len(missing_months)} mois...")
+    def _on_fill_finished(self, ok, msg):
+        self.fill_progress.setVisible(False)
+        self.fill_btn.setEnabled(True)
+        self.fill_cancel_btn.setEnabled(False)
+        self.fill_status.setText(msg)
+        self.fill_log.append(("✅ " if ok else "⚠️ ") + msg)
 
-                for month in missing_months:
-                    self.results_text.append(f"  Téléchargement: {month}...")
-                    self.progress_details.setText(f"Récupération: {month}...")
+    def _cancel_fill(self):
+        if self._fill_worker:
+            self._fill_worker.cancel()
+            self.fill_status.setText("Annulation...")
 
-                    port_formatted = f"{port_name.lower().replace(' ', '-')}-{port_code}"
-                    result = fonctions.recuperation_et_sauvegarde_url(
-                        'https://marine.meteoconsult.fr/meteo-marine/horaires-des-marees',
-                        port_formatted,
-                        month,
-                        str(year)
-                    )
+    # ---- ajout de port ----
+    def _add_port(self):
+        ok, msg = ports_module.add_port(
+            self.np_name.text(), self.np_code.text(),
+            self.np_lat.text() or None, self.np_lon.text() or None,
+            self.np_region.text(), self.np_coast.currentText())
+        if ok:
+            self.ports = ports_module.load_ports()
+            self._fill_port_list(self.ports)
+            self.ports_info.setText(f"{len(self.ports)} ports disponibles. {msg}")
+            for f in (self.np_name, self.np_code, self.np_lat, self.np_lon, self.np_region):
+                f.clear()
+            QMessageBox.information(self, "Port ajouté",
+                                    msg + "\nRedémarrez pour l'afficher sur la carte.")
+        else:
+            QMessageBox.warning(self, "Ajout impossible", msg)
 
-                    if result:
-                        self.results_text.append(f"  ✅ {month}: OK")
-                    else:
-                        self.results_text.append(f"  ❌ {month}: Échec")
-
-            # Générer le calendrier avec tous les mois
-            self.progress_details.setText("Génération du calendrier...")
-            self.results_text.append("")
-            self.results_text.append("🎨 Génération du calendrier...")
-
-            port_formatted = f"{port_name.lower().replace(' ', '-')}-{port_code}"
-            output_name = f"{port_name.lower().replace(' ', '_')}_{year}.png"
-            fonctions.creation_image_complete(str(year), all_months, port_formatted, size, fond, output_name)
-
-            self.cal_progress_bar.setValue(len(all_months) + 1)
-            self.progress_details.setText("Terminé !")
-
-            self.results_text.append("✅ Calendrier généré avec succès !")
-            self.results_text.append(f"📁 Fichier: {output_name}")
-
-            # Ouvrir le dossier de sortie
-            output_dir = "OUTPUT IMAGES"
-            if os.path.exists(output_dir):
-                os.startfile(output_dir)
-
-        except Exception as e:
-            self.results_text.append(f"❌ Erreur: {e}")
-            QMessageBox.critical(self, 'Erreur', f'Erreur lors du processus: {e}')
-
-        finally:
-            self.generate_btn.setEnabled(True)
-            self.cal_progress_bar.setVisible(False)
-            self.progress_details.setText("Prêt")
-
-
-
-    def log_message(self, message):
-        """Ajouter un message aux logs"""
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        self.logs_text.append(f"[{timestamp}] {message}")
-
-        # Scroll to bottom
-        scrollbar = self.logs_text.verticalScrollBar()
-        scrollbar.setValue(scrollbar.maximum())
+    def closeEvent(self, event):
+        for wkr in (self._gen_worker, self._fill_worker):
+            if wkr and wkr.isRunning():
+                wkr.cancel()
+                wkr.wait(2000)
+        event.accept()
 
 
-if __name__ == '__main__':
+STYLE = """
+QMainWindow, QWidget { background: #f6f8fa; font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; }
+QGroupBox { font-weight: 600; border: 1px solid #d0d7de; border-radius: 8px; margin-top: 10px; background: white; }
+QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 6px; color: #0d6efd; }
+QPushButton { background: #e9ecef; border: 1px solid #ced4da; border-radius: 6px; padding: 7px 12px; }
+QPushButton:hover { border-color: #0d6efd; }
+QPushButton#primary { background: #0d6efd; color: white; border: none; font-weight: 600; }
+QPushButton#primary:hover { background: #0b5ed7; }
+QPushButton#primary:disabled { background: #9ec5fe; }
+QLineEdit, QSpinBox, QComboBox { border: 1px solid #ced4da; border-radius: 6px; padding: 6px; background: white; }
+QLineEdit:focus, QSpinBox:focus, QComboBox:focus { border-color: #0d6efd; }
+QProgressBar { border: 1px solid #ced4da; border-radius: 6px; text-align: center; background: white; height: 20px; }
+QProgressBar::chunk { background: #198754; border-radius: 5px; }
+QTextEdit, QListWidget { border: 1px solid #d0d7de; border-radius: 6px; background: white; }
+QTabBar::tab { padding: 8px 16px; }
+QTabBar::tab:selected { color: #0d6efd; font-weight: 600; }
+"""
+
+
+def main():
     app = QApplication(sys.argv)
-
-    # Initialiser la base de données
-    fonctions.init_database()
-
-    # Créer et afficher la nouvelle interface
-    interface = BeautifulTidesInterface()
-    interface.show()
-
+    app.setFont(QFont("Segoe UI", 10))
+    try:
+        db.init_database()
+    except Exception as e:
+        print(f"[WARN] init base: {e}")
+    win = BeautifulTides()
+    win.show()
     sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()

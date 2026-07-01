@@ -1,0 +1,176 @@
+lu 1
+Maree haute 09h13 4.60m 56
+Maree basse 02h31 1.87m 56
+Maree haute 22h28 4.32m 51
+Maree basse 15h15 1.87m 51
+Lune : Dernier quartier de lune
+ma 2
+Maree haute 10h58 4.52m 47
+Maree basse 03h40 2.11m 47
+Maree haute 23h52 4.36m 47
+Maree basse 16h33 2.03m 47
+Lune : Dernier croissant de lune
+me 3
+Maree haute 12h18 4.61m 48
+Maree basse 04h58 2.18m 48
+Maree basse 17h55 1.97m
+Lune : Dernier croissant de lune
+je 4
+Maree haute 00h57 4.51m 52
+Maree basse 06h15 2.05m 52
+Maree haute 13h22 4.77m 56
+Maree basse 19h04 1.76m 56
+Lune : Dernier croissant de lune
+ve 5
+Maree haute 01h49 4.70m 61
+Maree basse 07h21 1.80m 61
+Maree haute 14h13 4.93m 66
+Maree basse 19h59 1.52m 66
+Lune : Dernier croissant de lune
+sa 6
+Maree haute 02h31 4.86m 71
+Maree basse 08h15 1.55m 71
+Maree haute 14h53 5.05m 75
+Maree basse 20h46 1.34m 75
+Lune : Dernier croissant de lune
+di 7
+Maree haute 03h05 5.00m 78
+Maree basse 09h03 1.36m 78
+Maree haute 15h26 5.12m 81
+Maree basse 21h28 1.23m 81
+Lune : Dernier croissant de lune
+lu 8
+Maree haute 03h36 5.11m 83
+Maree basse 09h45 1.25m 83
+Maree haute 15h56 5.16m 84
+Maree basse 22h07 1.21m 84
+Lune : Dernier croissant de lune
+ma 9
+Maree haute 04h06 5.18m 84
+Maree basse 10h25 1.22m 84
+Maree haute 16h26 5.14m 84
+Maree basse 22h43 1.26m 84
+Lune : Nouvelle lune
+me 10
+Maree haute 04h37 5.20m 83
+Maree basse 11h02 1.27m 83
+Maree haute 16h56 5.07m 82
+Maree basse 23h17 1.38m 82
+Lune : Premier croissant de lune
+je 11
+Maree haute 05h08 5.15m 80
+Maree basse 11h37 1.38m 80
+Maree haute 17h26 4.95m 77
+Maree basse 23h51 1.54m 77
+Lune : Premier croissant de lune
+ve 12
+Maree haute 05h41 5.05m 74
+Maree basse 12h12 1.53m 74
+Maree haute 17h57 4.78m 71
+Lune : Premier croissant de lune
+sa 13
+Maree haute 06h15 4.90m 67
+Maree basse 00h25 1.74m 67
+Maree haute 18h29 4.58m 63
+Maree basse 12h47 1.72m 63
+Lune : Premier croissant de lune
+di 14
+Maree haute 06h53 4.71m 58
+Maree basse 01h01 1.96m 58
+Maree haute 19h06 4.37m 54
+Maree basse 13h25 1.93m 54
+Lune : Premier croissant de lune
+lu 15
+Maree haute 07h37 4.52m 49
+Maree basse 01h40 2.18m 49
+Maree haute 19h52 4.17m 45
+Maree basse 14h07 2.14m 45
+Lune : Premier croissant de lune
+ma 16
+Maree haute 08h34 4.34m 41
+Maree basse 02h27 2.38m 41
+Maree haute 21h04 4.02m 38
+Maree basse 14h57 2.32m 38
+Lune : Premier croissant de lune
+me 17
+Maree haute 09h51 4.24m 35
+Maree basse 03h23 2.52m 35
+Maree haute 22h51 4.00m 34
+Maree basse 15h58 2.43m 34
+Lune : Premier quartier de lune
+je 18
+Maree haute 11h12 4.28m 35
+Maree basse 04h31 2.56m 35
+Maree basse 17h08 2.40m
+Lune : Lune gibbeuse croissante
+ve 19
+Maree haute 00h03 4.15m 37
+Maree basse 05h41 2.45m 37
+Maree haute 12h18 4.42m 41
+Maree basse 18h15 2.23m 41
+Lune : Lune gibbeuse croissante
+sa 20
+Maree haute 00h57 4.37m 46
+Maree basse 06h42 2.22m 46
+Maree haute 13h12 4.64m 51
+Maree basse 19h11 1.96m 51
+Lune : Lune gibbeuse croissante
+di 21
+Maree haute 01h42 4.64m 57
+Maree basse 07h34 1.93m 57
+Maree haute 14h00 4.89m 64
+Maree basse 19h59 1.65m 64
+Lune : Lune gibbeuse croissante
+lu 22
+Maree haute 02h24 4.91m 70
+Maree basse 08h21 1.61m 70
+Maree haute 14h46 5.13m 76
+Maree basse 20h43 1.36m 76
+Lune : Lune gibbeuse croissante
+ma 23
+Maree haute 03h05 5.16m 81
+Maree basse 09h07 1.30m 81
+Maree haute 15h30 5.34m 86
+Maree basse 21h27 1.13m 86
+Lune : Lune gibbeuse croissante
+me 24
+Maree haute 03h47 5.37m 90
+Maree basse 09h53 1.04m 90
+Maree haute 16h14 5.46m 93
+Maree basse 22h12 0.97m 93
+Lune : Pleine lune
+je 25
+Maree haute 04h31 5.49m 96
+Maree basse 10h40 0.87m 96
+Maree haute 17h01 5.49m 97
+Maree basse 22h57 0.92m 97
+Lune : Lune gibbeuse décroissante
+ve 26
+Maree haute 05h17 5.52m 97
+Maree basse 11h28 0.82m 97
+Maree haute 17h49 5.40m 96
+Maree basse 23h45 0.99m 96
+Lune : Lune gibbeuse décroissante
+sa 27
+Maree haute 06h05 5.45m 94
+Maree basse 12h18 0.89m 94
+Maree haute 18h40 5.20m 90
+Lune : Lune gibbeuse décroissante
+di 28
+Maree haute 06h58 5.30m 86
+Maree basse 00h35 1.15m 86
+Maree haute 19h37 4.94m 82
+Maree basse 13h10 1.07m 82
+Lune : Lune gibbeuse décroissante
+lu 29
+Maree haute 07h57 5.08m 76
+Maree basse 01h27 1.37m 76
+Maree haute 20h42 4.68m 71
+Maree basse 14h05 1.32m 71
+Lune : Lune gibbeuse décroissante
+ma 30
+Maree haute 09h04 4.86m 66
+Maree basse 02h24 1.62m 66
+Maree haute 22h00 4.49m 62
+Maree basse 15h05 1.58m 62
+Lune : Lune gibbeuse décroissante

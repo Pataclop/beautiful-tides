@@ -2,5 +2,10 @@
 *.png
 *.jpg
 .DS_Store
-__pycache__/fonctions.cpython-310.pyc
+__pycache__/
 *.pyc
+
+# Garder les visuels du README malgré la regle globale sur les images
+!readme_images/
+!readme_images/**
+readme_images/.DS_Store

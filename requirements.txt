@@ -1,8 +1,17 @@
+# Rendu et donnees
 matplotlib
 numpy
 opencv-python
+Pillow
 requests
 beautifulsoup4
 unidecode
-Pillow
-pyqt5
+
+# Interface graphique (PyQt6). PyQt6-WebEngine est optionnel : il active la
+# carte interactive en ligne ; sans lui, une carte hors-ligne est utilisee.
+PyQt6
+PyQt6-WebEngine
+
+# Scraping des donnees de marees (necessaire uniquement pour telecharger de
+# nouvelles donnees). Apres installation : `playwright install chromium`.
+playwright

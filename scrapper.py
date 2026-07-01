@@ -17,9 +17,11 @@ try:
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
-    print("ERREUR: Playwright n'est pas installé. Installez-le avec: pip install playwright")
-    print("Puis exécutez: playwright install")
-    sys.exit(1)
+    sync_playwright = None
+    # Ne pas quitter a l'import : le scraping en direct sera indisponible mais la
+    # lecture depuis la base de donnees (donnees deja presentes) reste possible.
+    print("[INFO] Playwright non disponible - le scraping en direct est desactive "
+          "(installez-le avec 'pip install playwright' puis 'playwright install').")
 
 from bs4 import BeautifulSoup
 
